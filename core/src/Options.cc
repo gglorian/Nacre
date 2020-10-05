@@ -38,11 +38,13 @@
 
 namespace Options {
 int baseRst = 10;
+int nbSols = -1;
 rstTypes optRst = rstTypes::low;
 valueSelectionTypes valueSelection = valueSelectionTypes::min;
 bool assign = true;
 bool saving = false;
 countTypes countSols = countTypes::no;
+printTypes printSols = printTypes::no;
 variableHeuristic varHeuristic = variableHeuristic::domwdeg;
 verbose Verbose = verbose::low;
 bool reduceDBOpt = true;
@@ -72,12 +74,48 @@ bool Options::load_options(int& argc, char** argv, int& method)
     for (int i = 2; i < argc; ++i) {
         std::string arg = argv[i];
 
+        if (!arg.compare("-moreHelp")) {
+            method = 0;
+            return false;
+        }
+
         // Count solutions
-        if (!arg.compare("-sols")) {
+        else if (!arg.substr(0, 5).compare("-sols")) {
+
+            if (method != 1) {
+                std::cerr << "Option -sols not available for method \"" << strMethod << "\"." << std::endl;
+                return true;
+            }
+
             Options::countSols = countTypes::all;
+
             if (method == 1) {
                 Options::optRst = rstTypes::noRst;
                 baseRst = std::numeric_limits<int>::max();
+            }
+
+            if (arg.size() == 5)
+                continue;
+
+            try {
+                Options::nbSols = std::stoi(arg.substr(6));
+                if (Options::printSols != printTypes::all)
+                    Options::printSols = printTypes::last;
+            } catch (const std::exception& e) {
+                std::cerr << "Option -sols=rvalue expect a valid integer as right value" << std::endl;
+                return true;
+            }
+
+        }
+
+        else if (!arg.substr(0, 10).compare("-printSols")) {
+            if (arg.size() == 10 || !arg.substr(11).compare("all") || !arg.substr(10).compare(""))
+                Options::printSols = printTypes::all;
+            else if (!arg.substr(11).compare("last"))
+                Options::printSols = printTypes::last;
+            else {
+                std::cerr << "Option -printSols=rvalue expect \"all\" or \"last\" as right value" << std::endl;
+                return true;
             }
         }
 

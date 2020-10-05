@@ -1420,8 +1420,12 @@ void show_advanced_help()
     cerr << "       -saving   => Tries to assign a var at the same value as before" << endl;
     cerr << "       -refutation " << endl;
     cerr << endl;
+    cerr << "    Solutions (complete method)" << endl;
+    cerr << "       -sols{=n}        => Count {the first n} solutions" << endl;
+    cerr << "       -printSols{=all} => Print all the solutions" << endl;
+    cerr << "       -printSols=last  => Print only the last solution (default setting when using -sols=n)" << endl;
+    cerr << endl;
     cerr << "    Miscellaneous" << endl;
-    cerr << "       -sols     => Count Solutions (complete/nld) " << endl;
     cerr << "       -verb=n   => n in 0..3, Verbosity level (default 1)" << endl;
     cerr << endl;
 } // show_help
@@ -1452,6 +1456,10 @@ Solver* create_solver(int seed, int argc, char** argv)
 
     problem->init(vecCont, vecBtConst);
 
+    if (method == 0) {
+        show_advanced_help();
+        exit(0);
+    }
     if (method == 1)
         return new CompleteSolver(problem);
     if (method == 2)

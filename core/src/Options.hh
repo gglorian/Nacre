@@ -46,6 +46,10 @@ enum class variableHeuristic { dom,
 enum class countTypes { no,
     all };
 
+enum class printTypes { no,
+    last,
+    all };
+
 enum class verbose { no,
     low,
     medium,
@@ -64,6 +68,8 @@ namespace Options {
 extern int baseRst;
 extern rstTypes optRst;
 extern countTypes countSols;
+extern printTypes printSols;
+extern int nbSols;
 extern valueSelectionTypes valueSelection;
 extern bool assign;
 extern bool saving;

@@ -109,10 +109,8 @@ int CompleteSolver::search(int zeroing)
                 return 0;
             }
 
-            Stats::nbSols++;
-
-            if (Options::Verbose >= verbose::high) {
-                cout << "v <instantiation> <list> ";
+            if (Options::printSols == printTypes::all || Options::Verbose >= verbose::high) {
+                cout << "v <instantiation id=" << Stats::nbSols << "> <list> ";
                 for (auto var : problem->getVariables())
                     cout << var->getName() << " ";
                 cout << "</list> <values>";
@@ -122,9 +120,34 @@ int CompleteSolver::search(int zeroing)
                      << endl;
             }
 
+            Stats::nbSols++;
+
+            if (Options::nbSols == Stats::nbSols) {
+                if (Options::printSols == printTypes::last) {
+                    cout << "c\nv <instantiation id=" << Stats::nbSols - 1 << "> <list> ";
+                    for (auto var : problem->getVariables())
+                        cout << var->getName() << " ";
+                    cout << "</list> <values>";
+                    for (auto var : problem->getVariables())
+                        cout << var->getVarPropFromLocalDomInd(0).val << " ";
+                    cout << "</values> </instantiation>" << endl;
+                }
+                return 2;
+            }
+
             cspAC->cleanQueue();
-            if (cspAC->getDecisionLevel() == zeroing)
+            if (cspAC->getDecisionLevel() == zeroing) {
+                if (Options::printSols == printTypes::last) {
+                    cout << "c\nv <instantiation id=" << Stats::nbSols - 1 << "> <list> ";
+                    for (auto var : problem->getVariables())
+                        cout << var->getName() << " ";
+                    cout << "</list> <values>";
+                    for (auto var : problem->getVariables())
+                        cout << var->getVarPropFromLocalDomInd(0).val << " ";
+                    cout << "</values> </instantiation>" << endl;
+                }
                 return 1;
+            }
 
             cspAC->cancelUntil(cspAC->getDecisionLevel() - 1);
 
