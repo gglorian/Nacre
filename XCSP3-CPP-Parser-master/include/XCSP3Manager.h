@@ -59,6 +59,7 @@ namespace XCSP3Core {
         void createPrimitivePatterns();
         void destroyPrimitivePatterns();
 
+        void containsTrees(vector<XVariable *>&list, vector<Tree *>&newlist);
 
     public :
         // XCSP3CoreCallbacks *c, std::map<std::string, XEntity *> &m, bool
@@ -66,6 +67,7 @@ namespace XCSP3Core {
 
 
         void beginInstance(InstanceType type) {
+            callback->_arguments = nullptr;
             callback->beginInstance(type);
         }
 
@@ -222,6 +224,9 @@ namespace XCSP3Core {
         void newConstraintElement(XConstraintElement *constraint);
 
 
+        void newConstraintElementMatrix(XConstraintElementMatrix *constraint);
+
+
         void newConstraintChannel(XConstraintChannel *constraint);
         //--------------------------------------------------------------------------------------
         // packing and scheduling constraints
@@ -245,6 +250,11 @@ namespace XCSP3Core {
         //--------------------------------------------------------------------------------------
         void newConstraintInstantiation(XConstraintInstantiation *constraint);
 
+
+        //--------------------------------------------------------------------------------------
+        // Clause  constraint
+        //--------------------------------------------------------------------------------------
+        void newConstraintClause(XConstraintClause *constraint);
 
 
         //--------------------------------------------------------------------------------------

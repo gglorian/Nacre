@@ -96,9 +96,9 @@ namespace XCSP3Core {
         protected:
             bool activated;
             XMLParser *parser;
-            string tagName;
 
         public:
+            string tagName;
             TagAction(XMLParser *parser, string name) : parser(parser), tagName(name) { activated = false; }
 
 
@@ -215,7 +215,9 @@ namespace XCSP3Core {
         string condition;          // used to store a condition in prefix form
         bool star;                 // true if the extension contain star in tuples
         int startIndex, startIndex2;            // used in some list tag
+        int startRowIndex, startColIndex;
         XVariable *index;          // used with tag index
+        XVariable *index2;         // Only for element matrix
         RankType rank;             // used with rank tag
         OrderType op;
         string expr;
@@ -674,6 +676,19 @@ namespace XCSP3Core {
             void endTag() override;
         };
 
+        /***************************************************************************
+         * Actions performed on clause tag
+         ****************************************************************************/
+        class ClauseTagAction : public BasicConstraintTagAction {
+        protected :
+            UTF8String literals;
+        public:
+            ClauseTagAction(XMLParser *parser, string name) : BasicConstraintTagAction(parser, name) { }
+            XConstraintClause *constraint;
+            void beginTag(const AttributeList &attributes) override;
+            void text(const UTF8String txt, bool last) override;
+            void endTag() override;
+        };
 
         /***************************************************************************
          * Actions performed on LIST tag
@@ -723,7 +738,17 @@ namespace XCSP3Core {
 
             virtual void endTag() {
                 this->parser->condition = trim(this->parser->condition);
-            }
+
+                std::regex const rglt(R"(\(.*(le|lt|ge|gt|in|eq|ne),%([0-9]+)\).*)");
+                std::smatch match;
+                std::regex_match(this->parser->condition, match, rglt);
+
+                if(match.size() != 3)
+                    return;
+                int tmp =  std::stoi(match[2].str());
+                if(XParameterVariable::max < tmp)
+                    XParameterVariable::max = tmp;
+                }
         };
 
 
@@ -824,6 +849,7 @@ namespace XCSP3Core {
          ****************************************************************************/
         class BlockTagAction : public TagAction {
         public:
+            vector<string> classes; // it is possible to have block inside block
             BlockTagAction(XMLParser *parser, string name) : TagAction(parser, name) { }
             void beginTag(const AttributeList &attributes) override;
             void endTag() override;

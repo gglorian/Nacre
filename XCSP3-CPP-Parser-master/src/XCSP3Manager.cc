@@ -389,19 +389,39 @@ void XCSP3Manager::newConstraintMDD(XConstraintMDD *constraint) {
 // Comparison constraints
 //--------------------------------------------------------------------------------------
 
+void XCSP3Manager::containsTrees(vector<XVariable *>&list, vector<Tree *>&trees) {
+    trees.clear();
+    XTree *xt = nullptr;
+    for(XVariable *x : list) {
+        xt = dynamic_cast<XTree *>(x);
+        if(xt != nullptr) { // The list contains at least one tree. Transform in list of trees
+            break;
+        }
+    }
+    if(xt == nullptr)
+        return;
+
+    for(XVariable *x : list) {
+        xt = dynamic_cast<XTree *>(x);
+        if(xt != nullptr) { // The list contains at least one tree. Transform in list of trees
+            Tree *t = new Tree(xt->id);
+            t->canonize();
+            trees.push_back(t);
+        } else {
+            Tree *t = new Tree(x->id);
+            trees.push_back(t);
+        }
+    }
+}
+
 void XCSP3Manager::newConstraintAllDiff(XConstraintAllDiff *constraint) {
+    vector<Tree *> trees;
+
     if(discardedClasses(constraint->classes))
         return;
     if(constraint->except.size() == 0) {
-        XTree *xt = dynamic_cast<XTree *>(constraint->list[0]);
-        if(xt != nullptr) { // alldif over tree
-            vector<Tree *> trees;
-            for(XVariable *x : constraint->list) {
-                xt = dynamic_cast<XTree *>(x);
-                Tree *t = new Tree(xt->id);
-                t->canonize();
-                trees.push_back(t);
-            }
+        containsTrees(constraint->list, trees);
+        if(trees.size() > 0) { // alldif over tree
             callback->buildConstraintAlldifferent(constraint->id, trees);
             return;
         }
@@ -496,15 +516,9 @@ void XCSP3Manager::newConstraintSum(XConstraintSum *constraint) {
     XCondition xc;
     constraint->extractCondition(xc);
 
-    XTree *xt = dynamic_cast<XTree *>(constraint->list[0]);
-    if(xt != nullptr) { // Sum over tree
-        vector<Tree *> trees;
-        for(XVariable *x : constraint->list) {
-            xt = dynamic_cast<XTree *>(x);
-            Tree *t = new Tree(xt->id);
-            t->canonize();
-            trees.push_back(t);
-        }
+    vector<Tree *> trees;
+    containsTrees(constraint->list, trees);
+    if(trees.size() > 0) { // alldif over tree
         if(constraint->values.size() == 0)
             callback->buildConstraintSum(constraint->id, trees, xc);
         else {
@@ -737,7 +751,12 @@ void XCSP3Manager::newConstraintMinimum(XConstraintMinimum *constraint) {
     constraint->extractCondition(xc);
 
     if(constraint->index == NULL) {
-        callback->buildConstraintMinimum(constraint->id, constraint->list, xc);
+        vector<Tree *> trees;
+        containsTrees(constraint->list, trees);
+        if(trees.size() > 0)
+            callback->buildConstraintMinimum(constraint->id, trees, xc);
+        else
+            callback->buildConstraintMinimum(constraint->id, constraint->list, xc);
         return;
     }
     callback->buildConstraintMinimum(constraint->id, constraint->list, constraint->index, constraint->startIndex, constraint->rank, xc);
@@ -751,7 +770,12 @@ void XCSP3Manager::newConstraintMaximum(XConstraintMaximum *constraint) {
     constraint->extractCondition(xc);
 
     if(constraint->index == NULL) {
-        callback->buildConstraintMaximum(constraint->id, constraint->list, xc);
+        vector<Tree *> trees;
+        containsTrees(constraint->list, trees);
+        if(trees.size() > 0)
+            callback->buildConstraintMaximum(constraint->id, trees, xc);
+        else
+            callback->buildConstraintMaximum(constraint->id, constraint->list, xc);
         return;
     }
     callback->buildConstraintMaximum(constraint->id, constraint->list, constraint->index, constraint->startIndex, constraint->rank, xc);
@@ -798,6 +822,28 @@ void XCSP3Manager::newConstraintElement(XConstraintElement *constraint) {
         else
             callback->buildConstraintElement(constraint->id, constraint->list, constraint->startIndex, constraint->index, constraint->rank, xv);
     }
+}
+
+
+void XCSP3Manager::newConstraintElementMatrix(XConstraintElementMatrix *constraint) {
+    if(discardedClasses(constraint->classes))
+        return;
+    int v;
+    if(isInteger(constraint->matrix[0][0], v)) {
+        vector<vector<int> > matrix;
+        matrix.resize(constraint->matrix.size());
+        for(unsigned int i = 0 ; i < constraint->matrix.size() ; i++)
+            for(unsigned int j = 0 ; j < constraint->matrix[i].size() ; j++) {
+                isInteger(constraint->matrix[i][j], v);
+                matrix[i].push_back(v);
+            }
+        callback->buildConstraintElement(constraint->id, matrix, constraint->startRowIndex, constraint->index, constraint->startColIndex, constraint->index2, constraint->value);
+        return;
+    }
+    if(isInteger(constraint->value, v))
+        callback->buildConstraintElement(constraint->id, constraint->matrix, constraint->startRowIndex, constraint->index, constraint->startColIndex, constraint->index2, v);
+     else
+        callback->buildConstraintElement(constraint->id, constraint->matrix, constraint->startRowIndex, constraint->index, constraint->startColIndex, constraint->index2, constraint->value);
 }
 
 
@@ -960,6 +1006,16 @@ void XCSP3Manager::newConstraintInstantiation(XConstraintInstantiation *constrai
     callback->buildConstraintInstantiation(constraint->id, constraint->list, constraint->values);
 }
 
+//--------------------------------------------------------------------------------------
+// Clause  constraint
+//--------------------------------------------------------------------------------------
+
+void XCSP3Manager::newConstraintClause(XConstraintClause *constraint) {
+    if(discardedClasses(constraint->classes))
+        return;
+    callback->buildConstraintClause(constraint->id, constraint->positive, constraint->negative);
+}
+
 
 //--------------------------------------------------------------------------------------
 // Graph  constraints
@@ -1001,6 +1057,8 @@ void XCSP3Manager::newConstraintGroup(XConstraintGroup *group) {
         return;
 
     vector<XVariable *> previousArguments; // Used to check if extension arguments have same domains
+    callback->_arguments = &(group->arguments);
+    
     for(unsigned int i = 0 ; i < group->arguments.size() ; i++) {
         if(group->type == INTENSION)
             unfoldConstraint<XConstraintIntension>(group, i, &XCSP3Manager::newConstraintIntension);
@@ -1034,6 +1092,8 @@ void XCSP3Manager::newConstraintGroup(XConstraintGroup *group) {
             delete ce;
         }
 
+        if(group->type == CLAUSE)
+            unfoldConstraint<XConstraintClause>(group, i, &XCSP3Manager::newConstraintClause);
         if(group->type == INSTANTIATION)
             unfoldConstraint<XConstraintInstantiation>(group, i, &XCSP3Manager::newConstraintInstantiation);
         if(group->type == ALLDIFF)
@@ -1056,6 +1116,8 @@ void XCSP3Manager::newConstraintGroup(XConstraintGroup *group) {
             unfoldConstraint<XConstraintMinimum>(group, i, &XCSP3Manager::newConstraintMinimum);
         if(group->type == ELEMENT)
             unfoldConstraint<XConstraintElement>(group, i, &XCSP3Manager::newConstraintElement);
+        if(group->type == ELEMENTMATRIX)
+            unfoldConstraint<XConstraintElementMatrix>(group, i, &XCSP3Manager::newConstraintElementMatrix);
         if(group->type == NOOVERLAP)
             unfoldConstraint<XConstraintNoOverlap>(group, i, &XCSP3Manager::newConstraintNoOverlap);
         if(group->type == STRETCH)
@@ -1077,6 +1139,7 @@ void XCSP3Manager::newConstraintGroup(XConstraintGroup *group) {
             throw runtime_error("Group constraint is badly defined");
         }
     }
+    callback->_arguments = nullptr;
 }
 
 
@@ -1096,6 +1159,29 @@ void XCSP3Manager::addObjective(XObjective *objective) {
             callback->buildObjectiveMaximizeExpression(objective->expression);
         return;
     }
+
+
+    // Expressions ??
+    vector<Tree *> trees;
+    containsTrees(objective->list, trees);
+    if(trees.size() > 0) { // alldif over tree
+        if(objective->coeffs.size() == 0) {
+            if(objective->goal == MINIMIZE)
+                callback->buildObjectiveMinimize(objective->type, trees);
+            else
+                callback->buildObjectiveMaximize(objective->type, trees);
+            return;
+        }
+        if(objective->goal == MINIMIZE)
+            callback->buildObjectiveMinimize(objective->type, trees, objective->coeffs);
+        else
+            callback->buildObjectiveMaximize(objective->type, trees, objective->coeffs);
+
+        return;
+    }
+
+
+
     if(objective->type == SUM_O && callback->normalizeSum) {
         if(objective->coeffs.size() == 0) {
             bool toModify = false;

@@ -107,7 +107,7 @@ namespace XCSP3Core {
         string condition;
 
 
-        void unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original);
+        virtual void unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original);
         void extractCondition(XCondition &xc);  // Create the op and the operand (which can be a value, an interval or a XVariable)
     };
 
@@ -205,9 +205,9 @@ namespace XCSP3Core {
         string to;
     };
 
-    static vector<XTransition> tr; // Not beautiful but remove code to fixed data in group constraint.
-    static string st;
-    static vector<string> fi;
+    extern vector<XTransition> tr; // Not beautiful but remove code to fixed data in group constraint.
+    extern string st;
+    extern vector<string> fi;
 
     class XConstraintRegular : public XConstraint {
     public :
@@ -236,7 +236,7 @@ namespace XCSP3Core {
      *                  COMPARISON BASED CONSTRAINTS
      ****************************************************************************
      ***************************************************************************/
-    static vector<int> _except;
+    extern vector<int> _except;
 
     class XConstraintAllDiff : public XConstraint {
     public :
@@ -273,7 +273,7 @@ namespace XCSP3Core {
      * constraint ordered and lex
      **************************************************************************/
 
-    static OrderType _op;
+    extern OrderType _op;
 
     class XConstraintOrdered : public XConstraint, public XLengths {
     public :
@@ -411,6 +411,24 @@ namespace XCSP3Core {
         void unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) override;
     };
 
+    class XConstraintElementMatrix : public XConstraintElement {
+    public :
+        vector<vector<XVariable *> > matrix;
+        XVariable *index2;
+        int startRowIndex, startColIndex;
+
+        XConstraintElementMatrix(std::string idd, std::string c) : XConstraintElement(idd, c) {}
+
+        XConstraintElementMatrix(std::string idd, std::string c, vector<vector<XVariable *> > &mat) : XConstraintElement(idd, c) {
+            matrix.resize(mat.size());
+            for(unsigned int i = 0 ; i < mat.size() ; i++)
+                matrix[i].assign(mat[i].begin(), mat[i].end());
+        }
+
+
+        void unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) override;
+    };
+
     /***************************************************************************
      * constraint channel
      **************************************************************************/
@@ -492,7 +510,7 @@ namespace XCSP3Core {
      * constraint instantiation
      **************************************************************************/
 
-    static vector<int> _values;
+    extern vector<int> _values;
 
     class XConstraintInstantiation : public XConstraint {
     public :
@@ -500,6 +518,22 @@ namespace XCSP3Core {
 
 
         XConstraintInstantiation(std::string idd, std::string c) : XConstraint(idd, c), values(_values) {}
+    };
+
+
+    /***************************************************************************
+     * constraint clause
+     **************************************************************************/
+
+
+    class XConstraintClause : public XConstraint {
+    public :
+        vector<XVariable *> positive;
+        vector<XVariable *> negative;
+
+
+        XConstraintClause(std::string idd, std::string c) : XConstraint(idd, c) { }
+        void unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) override;
     };
 
     /***************************************************************************

@@ -192,6 +192,8 @@ namespace XCSP3Core {
 
         virtual void buildConstraintElement(string id, vector<int> &list, int startIndex, XVariable *index, RankType rank, XVariable *value) override;
 
+        virtual void buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) override;
+
         virtual void buildConstraintChannel(string id, vector<XVariable *> &list, int startIndex) override;
 
         virtual void buildConstraintChannel(string id, vector<XVariable *> &list1, int startIndex1, vector<XVariable *> &list2, int startIndex2) override;
@@ -213,6 +215,7 @@ namespace XCSP3Core {
 
         virtual void buildConstraintInstantiation(string id, vector<XVariable *> &list, vector<int> &values) override;
 
+        virtual void buildConstraintClause(string id, vector<XVariable *> &positive, vector<XVariable *> &negative) override ;
 
         virtual void buildConstraintCircuit(string id, vector<XVariable *> &list, int startIndex) override;
 
@@ -902,6 +905,17 @@ void XCSP3PrintCallbacks::buildConstraintElement(string, vector<XVariable *> &li
     cout << "        index : " << *index << endl;
 }
 
+void XCSP3PrintCallbacks::buildConstraintElement(string id, vector<vector<int> > &matrix, int startRowIndex, XVariable *rowIndex, int startColIndex, XVariable* colIndex, XVariable *value) {
+    cout << "\n    element matrix with rowIndex, colIndex and Value variables\n";
+    for(unsigned int i = 0; i < matrix.size(); i++) {
+        for(int j = 0; j < matrix.size(); j++)
+            cout << matrix[i][j] << " ";
+        cout << endl;
+    }
+    cout << "        row index : " << *rowIndex << endl;
+    cout << "        col index : " << *colIndex << endl;
+    cout << "        value     : " << *value << endl;
+}
 
 // string id, vector<XVariable *> &list, int startIndex, XVariable *index, RankType rank, XVariable *value
 void XCSP3PrintCallbacks::buildConstraintElement(string, vector<XVariable *> &list, int startIndex, XVariable *index, RankType, XVariable *value) {
@@ -1041,6 +1055,17 @@ void XCSP3PrintCallbacks::buildConstraintInstantiation(string, vector<XVariable 
     displayList(list);
     cout << "        values:";
     displayList(values);
+
+}
+
+
+// string id, vector<XVariable *> &list, vector<int> &values
+void XCSP3PrintCallbacks::buildConstraintClause(string, vector<XVariable *> &positive, vector<XVariable *> &negative) {
+    cout << "\n    Clause constraint" << endl;
+    cout << "        positive lits size:" << positive.size() <<" ";
+    displayList(positive);
+    cout << "        negative lits size:" << negative.size() <<" ";
+    displayList(negative);
 
 }
 
