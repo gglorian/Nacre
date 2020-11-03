@@ -24,7 +24,7 @@
  * @Author: Gaël Glorian
  * @Contact: glorian@cril.fr
  * @Last Modified By: Gaël Glorian
- * @Last Modified Time: May 7, 2018 5:57 PM
+ * @Last Modified Time: Nov 3, 2020 11:03 AM
  * @Description: Modify Here, Please 
  */
 
@@ -107,7 +107,7 @@ public:
     virtual bool propagate(int level, Variable* cur, std::vector<Variable*>& touched) = 0;
 
     /// Must be implemented for backtrackable constaints
-    virtual void backtrack(int level){};
+    virtual void backtrack(int level) {};
 
     virtual void getConflict(std::vector<unsigned>& cl);
 
@@ -136,14 +136,18 @@ public:
     /// Contructor
     RefClause(unsigned r)
         : Constraint("ng" + std::to_string(r))
-        , ref(r){};
+        , ref(r) {};
 
     void getConflict(std::vector<unsigned>& cl) override;
 
     void getReason(unsigned lit, Expl& litExpl, int level, std::set<std::pair<unsigned, Expl*>, varOrderCmp>& stack, std::vector<unsigned>& cl) override;
 
     /// Implementation of the constraint dedicated propagator
-    bool propagate(int level, Variable* cur, std::vector<Variable*>& touched) { assert(false); };
+    bool propagate(int level, Variable* cur, std::vector<Variable*>& touched)
+    {
+        assert(false);
+        return true;
+    };
 };
 
 class Domain : public Constraint {
@@ -162,7 +166,11 @@ public:
     void getReason(unsigned lit, Expl& litExpl, int level, std::set<std::pair<unsigned, Expl*>, varOrderCmp>& stack, std::vector<unsigned>& cl) override;
 
     /// Implementation of the constraint dedicated propagator
-    bool propagate(int level, Variable* cur, std::vector<Variable*>& touched) { assert(false); };
+    bool propagate(int level, Variable* cur, std::vector<Variable*>& touched)
+    {
+        assert(false);
+        return true;
+    };
 };
 
 #endif // CONSTRAINT_H_
