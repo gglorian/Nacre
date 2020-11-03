@@ -2034,6 +2034,12 @@ namespace XCSP3Core {
         }
 
 
+        virtual void buildConstraintGraph(string id, vector<vector<XVariable *>> &matrix, vector<XVariable *> &entries, vector<XVariable *> &exits, vector<XVariable *> &actives,
+                                          vector<XVariable *> &finals) {
+            (void)id;(void)entries;(void)actives;(void)finals;(void)exits;
+            throw runtime_error("graph constraint not yet supported");
+        }
+
         /**
          * The callback function related to circuit   constraint with defined int size
          * See http://xcsp.org/specifications/circuit

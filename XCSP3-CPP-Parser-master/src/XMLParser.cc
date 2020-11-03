@@ -458,6 +458,14 @@ XMLParser::XMLParser(XCSP3CoreCallbacks *cb) {
     registerTagAction(tagList, new CircuitTagAction(this, "circuit"));
     registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "size", this->values));
 
+    // for graph
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "entries", this->entries));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "exits", this->exits));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "finals", this->finals));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "actives", this->actives));
+    registerTagAction(tagList, new GraphTagAction(this, "graph"));
+
+
 
 }
 

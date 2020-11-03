@@ -206,6 +206,14 @@ namespace XCSP3Core {
         vector<XVariable *> heights;   // used to store a origins in cumulative Constraint
         vector<XIntegerEntity *> widths;   // used to store lengths in stretch constraint
 
+
+        // Use for graph
+        vector<XVariable *> entries;   // used to store a origins in cumulative Constraint
+        vector<XVariable *> exits;   // used to store a origins in cumulative Constraint
+        vector<XVariable *> actives;   // used to store a origins in cumulative Constraint
+        vector<XVariable *> finals;   // used to store a origins in cumulative Constraint
+
+
         vector<int> currentTuple;
         ListTagAction *listTag;       // The List tag action call
 
@@ -951,6 +959,14 @@ namespace XCSP3Core {
             void endTag() override;
         };
 
+
+        class GraphTagAction : public BasicConstraintTagAction {
+        public :
+            GraphTagAction(XMLParser *parser, string name) : BasicConstraintTagAction(parser, name) { }
+            void beginTag(const AttributeList &attributes) override;
+            void text(const UTF8String txt, bool last) override;
+            void endTag() override;
+        };
 
         /***************************************************************************
          * Actions performed on  ANNOTATIONS TAG

@@ -1126,6 +1126,35 @@ void XMLParser::CircuitTagAction::endTag() {
 }
 
 
+
+void XMLParser::GraphTagAction::beginTag(const AttributeList &attributes) {
+    BasicConstraintTagAction::beginTag(attributes);
+
+    //constraint = new XConstraintCircuit(this->id, this->parser->classes);
+
+    // Link constraint to group
+    if(this->group != NULL) {
+        throw runtime_error("Graph and groups are not allowed");
+    }
+    this->parser->entries.clear();
+    this->parser->finals.clear();
+    this->parser->actives.clear();
+    this->parser->exits.clear();
+}
+
+
+// UTF8String txt, bool last
+void XMLParser::GraphTagAction::text(const UTF8String txt, bool) {
+}
+
+
+void XMLParser::GraphTagAction::endTag() {
+    if(this->parser->entries.size() != this->parser->finals.size() || this->parser->entries.size() != this->parser->actives.size() ||
+            this->parser->entries.size() != this->parser->exits.size()|| this->parser->matrix.size() != this->parser->entries.size())
+        throw runtime_error("graph contraints size of arrays are diffrent");
+    this->parser->manager->callback->buildConstraintGraph(id, this->parser->matrix, this->parser->entries, this->parser->exits, this->parser->actives, this->parser->finals);
+}
+
 /***************************************************************************
  ****************************************************************************
   *                            OBJECTIVES

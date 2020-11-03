@@ -251,6 +251,9 @@ namespace XCSP3Core {
 
         virtual void buildAnnotationDecision(vector<XVariable*> &list) override;
         bool canonize;
+
+        virtual void buildConstraintGraph(string id, vector<vector<XVariable *>> &matrix, vector<XVariable *> &entries, vector<XVariable *> &exits, vector<XVariable *> &actives,
+                                  vector<XVariable *> &finals) override;
     };
 
 
@@ -1078,6 +1081,33 @@ void XCSP3PrintCallbacks::buildConstraintCircuit(string, vector<XVariable *> &li
     cout << "        startIndex:" << startIndex << endl;
 }
 
+
+void XCSP3PrintCallbacks::buildConstraintGraph(string id, vector<vector<XVariable *>> &matrix, vector<XVariable *> &entries, vector<XVariable *> &exits, vector<XVariable *> &actives,
+                          vector<XVariable *> &finals) {
+    cout << "\n    graph  constraint" << id << endl;
+
+    cout << "\n    Matrix" << id << endl;
+
+    for(unsigned int i = 0; i < matrix.size(); i++) {
+        cout << "        ";
+        displayList(matrix[i]);
+    }
+
+    cout << "\n    entries" << id << endl;
+    displayList(entries);
+
+    cout << "\n    exits" << id << endl;
+    displayList(exits);
+
+    cout << "\n    actives" << id << endl;
+    displayList(actives);
+
+    cout << "\n    finals" << id << endl;
+    displayList(finals);
+
+
+
+}
 
 // string id, vector<XVariable *> &list, int startIndex, int size
 void XCSP3PrintCallbacks::buildConstraintCircuit(string, vector<XVariable *> &list, int startIndex, int size) {
