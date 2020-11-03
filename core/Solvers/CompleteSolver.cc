@@ -24,7 +24,7 @@
  * @Author: Gaël Glorian
  * @Contact: glorian@cril.fr
  * @Last Modified By: Gaël Glorian
- * @Last Modified Time: May 7, 2018 5:56 PM
+ * @Last Modified Time: Nov 3, 2020 11:02 AM
  * @Description: Modify Here, Please
  */
 
@@ -122,7 +122,7 @@ int CompleteSolver::search(int zeroing)
 
             Stats::nbSols++;
 
-            if (Options::nbSols == Stats::nbSols) {
+            if (Options::nbSols == (long long)Stats::nbSols) {
                 if (Options::printSols == printTypes::last) {
                     cout << "c\nv <instantiation id=" << Stats::nbSols - 1 << "> <list> ";
                     for (auto var : problem->getVariables())
