@@ -24,7 +24,7 @@
  * @Author: Gaël Glorian
  * @Contact: glorian@cril.fr
  * @Last Modified By: Gaël Glorian
- * @Last Modified Time: May 7, 2018 5:55 PM
+ * @Last Modified Time: Nov 3, 2020 11:04 AM
  * @Description: Modify Here, Please 
  */
 
@@ -43,6 +43,7 @@
 #include "ConstraintExtNConflict.hh"
 #include "ConstraintExtUnary.hh"
 #include "ConstraintExtremum.hh"
+#include "ConstraintGraph.hh"
 #include "ConstraintInt.hh"
 #include "ConstraintLexicographic.hh"
 #include "ConstraintNotAllEqual.hh"
@@ -298,6 +299,9 @@ public:
         std::cout << "s UNSUPPORTED" << endl;
         throw runtime_error("Unsupported");
     }
+
+    virtual void buildConstraintGraph(string id, vector<vector<XVariable*>>& matrix, vector<XVariable*>& entries, vector<XVariable*>& exits, vector<XVariable*>& actives,
+        vector<XVariable*>& finals) override;
 };
 }
 
@@ -1362,6 +1366,39 @@ void XCSP3Callbacks::buildConstraintInstantiation(string id, vector<XVariable*>&
 
     for (size_t i = 0; i < list.size(); i++)
         vecCont.push_back(new ConstraintExtUnary(id, getMyVar(list[i]), values[i], true));
+}
+
+void XCSP3Callbacks::buildConstraintGraph(string id, vector<vector<XVariable*>>& matrix, vector<XVariable*>& entries, vector<XVariable*>& exits, vector<XVariable*>& actives,
+    vector<XVariable*>& finals)
+{
+    vector<vector<Variable*>> matrixArg;
+    vector<Variable*> entriesArg;
+    vector<Variable*> exitsArg;
+    vector<Variable*> activesArg;
+    vector<Variable*> finalsArg;
+
+    for (unsigned int i = 0; i < matrix.size(); i++) {
+        vector<Variable*> line;
+        toMyVariables(matrix[i], line);
+        matrixArg.push_back(line);
+    }
+
+    toMyVariables(entries, entriesArg);
+    toMyVariables(exits, exitsArg);
+    toMyVariables(actives, activesArg);
+    toMyVariables(finals, finalsArg);
+
+    vector<Variable*> vars;
+
+    for (size_t i = 0, stop = matrixArg.size(); i < stop; i++)
+        vars.insert(vars.end(), matrixArg[i].begin(), matrixArg[i].end());
+
+    vars.insert(vars.end(), entriesArg.begin(), entriesArg.end());
+    vars.insert(vars.end(), exitsArg.begin(), exitsArg.end());
+    vars.insert(vars.end(), activesArg.begin(), activesArg.end());
+    vars.insert(vars.end(), finalsArg.begin(), finalsArg.end());
+
+    vecCont.push_back(new ConstraintGraph(id, vars, matrixArg, entriesArg, exitsArg, activesArg, finalsArg));
 }
 
 void show_help()
