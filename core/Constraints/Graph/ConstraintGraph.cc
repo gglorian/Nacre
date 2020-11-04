@@ -2,8 +2,8 @@
  * @CreateTime: Nov 3, 2020 10:44 AM 
  * @Author: Gaël Glorian 
  * @Contact: gael.glorian@gmail.com 
- * @Last Modified By: Gaël Glorian 
- * @Last Modified Time: Nov 3, 2020 10:44 AM 
+ * @Last Modified By: Gaël Glorian
+ * @Last Modified Time: Nov 4, 2020 2:11 PM
  * @Description: Modify Here, Please  
  */
 
@@ -123,7 +123,7 @@ bool ConstraintGraph::checkPaths(int level, vector<Variable*>& touched)
         } else {
             nbValidEntry++;
             for (size_t j = 0, stop = seen.size(); j < stop; ++j)
-                seen[j] = seen[j] | tmpSeen[j];
+                seen[j] = seen[j] || tmpSeen[j];
         }
 
         fill(tmpSeen.begin(), tmpSeen.end(), false);
