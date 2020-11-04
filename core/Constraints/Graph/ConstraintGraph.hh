@@ -27,10 +27,16 @@ protected:
     int numberOfRooms;
 
     std::vector<bool> seen;
+    std::vector<bool> tmpSeen;
     std::vector<int> roomStack;
 
     void addAllNext(int curRoom);
     bool connected(int level, std::vector<Variable*>& touched);
+
+    void addAllNextOriented(int curRoom);
+    bool checkPaths(int level, std::vector<Variable*>& touched);
+
+    bool filterNodes(int level, std::vector<Variable*>& touched);
 
 public:
     ConstraintGraph(std::string n, std::vector<Variable*> vars,
@@ -47,6 +53,7 @@ public:
     {
         numberOfRooms = entries.size();
         seen.resize(numberOfRooms);
+        tmpSeen.resize(numberOfRooms);
 
         for (size_t i = 0; i < matrix.size(); i++) {
             corridors.push_back(std::vector<Variable*>(matrix[i]));
