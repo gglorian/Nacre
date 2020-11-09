@@ -196,6 +196,8 @@ Variable* CompleteSolver::PickVariable()
         return heuristicDom();
     if (Options::varHeuristic == variableHeuristic::domdeg)
         return heuristicDomDeg();
+    if (Options::varHeuristic == variableHeuristic::lex)
+        return heuristicLexico();
 
     throw runtime_error("Something went wrong (Options compatibility maybe!?)");
 } // PickVariable
@@ -218,6 +220,18 @@ Variable* CompleteSolver::heuristicDom()
     }
 
     return retV;
+}
+
+Variable* CompleteSolver::heuristicLexico()
+{
+    for (auto vTmp : problem->getVariables()) {
+        if (vTmp->isAssigned())
+            continue;
+
+        return vTmp;
+    }
+
+    return nullptr;
 }
 
 Variable* CompleteSolver::heuristicDomDeg()

@@ -47,6 +47,7 @@ protected:
     Variable* heuristicDom();
     Variable* heuristicDomDeg();
     Variable* heuristicDomWDeg();
+    Variable* heuristicLexico();
 
 public:
     /// Constructor

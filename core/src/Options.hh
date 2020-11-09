@@ -41,6 +41,7 @@ enum class valueSelectionTypes { zero,
 
 enum class variableHeuristic { dom,
     domdeg,
+    lex,
     domwdeg };
 
 enum class countTypes { no,
