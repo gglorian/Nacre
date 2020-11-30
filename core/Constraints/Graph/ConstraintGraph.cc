@@ -38,6 +38,9 @@ bool ConstraintGraph::filterNodes(int level, vector<Variable*>& touched)
 void ConstraintGraph::addAllNext(int curRoom)
 {
     for (int i = 0; i < numberOfRooms; i++) {
+        if (actives[i]->isAssignedTo(0))
+            continue;
+
         if (!corridors[curRoom][i]->isAssigned() || corridors[curRoom][i]->isAssignedTo(1)) {
             roomStack.push_back(i);
             continue;
@@ -79,6 +82,9 @@ bool ConstraintGraph::connected(int level, vector<Variable*>& touched)
 void ConstraintGraph::addAllNextOriented(int curRoom)
 {
     for (int i = 0; i < numberOfRooms; i++) {
+        if (actives[i]->isAssignedTo(0))
+            continue;
+
         if (!corridors[curRoom][i]->isAssigned() || corridors[curRoom][i]->isAssignedTo(1))
             roomStack.push_back(i);
     }

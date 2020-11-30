@@ -57,8 +57,11 @@ bool ConsistencyHandler::init()
     if (Options::Verbose != verbose::no)
         cout << "c Init constraints...";
     for (auto c : problem->getConstraints())
-        if (c->init())
+        if (c->init()) {
+            cout << endl;
             return true;
+        }
+
     if (Options::Verbose != verbose::no)
         cout << "Done" << endl
              << "c Arc consistency is performing...";

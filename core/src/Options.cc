@@ -160,6 +160,8 @@ bool Options::load_options(int& argc, char** argv, int& method)
             Options::varHeuristic = variableHeuristic::domdeg;
         } else if (!arg.compare("-domwdeg") || !arg.compare("-dwd")) {
             Options::varHeuristic = variableHeuristic::domwdeg;
+        } else if (!arg.compare("-lexico") || !arg.compare("-lex")) {
+            Options::varHeuristic = variableHeuristic::lex;
         }
 
         // Heuristics -- Miscellaneous
