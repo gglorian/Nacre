@@ -41,11 +41,7 @@ void ConstraintGraph::addAllNext(int curRoom)
         if (actives[i]->isAssignedTo(0))
             continue;
 
-        if (!corridors[curRoom][i]->isAssigned() || corridors[curRoom][i]->isAssignedTo(1)) {
-            roomStack.push_back(i);
-            continue;
-        }
-        if (!corridors[i][curRoom]->isAssigned() || corridors[i][curRoom]->isAssignedTo(1))
+        if (!corridors[curRoom][i]->isAssignedTo(0) || !corridors[i][curRoom]->isAssignedTo(0))
             roomStack.push_back(i);
     }
 }
@@ -56,14 +52,18 @@ bool ConstraintGraph::connected(int level, vector<Variable*>& touched)
     roomStack.clear();
 
     // Put the first active room in the stack
+    bool sat = false;
     for (int i = 0; i < numberOfRooms; ++i) {
-        if (!actives[i]->isAssignedTo(0)) {
+        if (actives[i]->isAssignedTo(1)) {
             roomStack.push_back(i);
             break;
         }
+
+        if (!actives[i]->isAssignedTo(0))
+            sat = true;
     }
     if (roomStack.empty())
-        return true;
+        return !sat;
 
     while (!roomStack.empty()) {
         int curRoom = roomStack.back();
@@ -85,7 +85,7 @@ void ConstraintGraph::addAllNextOriented(int curRoom)
         if (actives[i]->isAssignedTo(0))
             continue;
 
-        if (!corridors[curRoom][i]->isAssigned() || corridors[curRoom][i]->isAssignedTo(1))
+        if (!corridors[curRoom][i]->isAssignedTo(0))
             roomStack.push_back(i);
     }
 }
