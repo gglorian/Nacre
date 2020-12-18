@@ -66,6 +66,8 @@ bool Options::load_options(int& argc, char** argv, int& method)
         method = 4;
     else if (!strMethod.compare("-ca"))
         method = 5;
+    else if (!strMethod.compare("-preproc"))
+        method = 6;
     else if (!strMethod.compare("-infosCSP"))
         method = 10;
     else

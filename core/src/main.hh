@@ -23,8 +23,8 @@
  * @CreateTime: Sep 26, 2017 2:50 PM
  * @Author: Gaël Glorian
  * @Contact: glorian@cril.fr
- * @Last Modified By: Gaël Glorian
- * @Last Modified Time: Nov 3, 2020 11:04 AM
+* @Last Modified By: Gaël Glorian
+* @Last Modified Time: Dec 18, 2020 11:40 AM
  * @Description: Modify Here, Please 
  */
 
@@ -56,6 +56,7 @@
 #include "IncNGCompleteSolver.hh"
 #include "LecoutreCompleteSolver.hh"
 #include "Options.hh"
+#include "PreprocSolver.hh"
 #include "Problem.hh"
 #include "Solver.hh"
 #include "Variable.hh"
@@ -1417,6 +1418,9 @@ void show_help()
     cerr << "       -ngen" << endl;
     cerr << "       -ca" << endl;
     cerr << endl;
+    cerr << "Apply only preproc: " << endl;
+    cerr << "    ./cspSolver BENCHNAME -preproc " << endl;
+    cerr << endl;
     cerr << "Print bench details: " << endl;
     cerr << "    ./cspSolver BENCHNAME -infosCSP " << endl;
     cerr << endl;
@@ -1507,6 +1511,8 @@ Solver* create_solver(int seed, int argc, char** argv)
         return new LecoutreCompleteSolver(problem);
     if (method == 5)
         return new ConflictAnalysisSolver(problem);
+    if (method == 6)
+        return new PreprocSolver(problem);
     if (method == 10) {
         print_infos();
         exit(0);
