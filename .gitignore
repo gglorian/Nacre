@@ -18,3 +18,4 @@ GTAGS
 GSYMS
 generator
 nacre*
+Tests/*
