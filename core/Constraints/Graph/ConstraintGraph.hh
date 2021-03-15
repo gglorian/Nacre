@@ -2,8 +2,8 @@
  * @CreateTime: Nov 3, 2020 9:50 AM 
  * @Author: Gaël Glorian 
  * @Contact: gael.glorian@gmail.com 
- * @Last Modified By: Gaël Glorian
- * @Last Modified Time: Nov 4, 2020 2:13 PM
+* @Last Modified By: Gaël Glorian
+* @Last Modified Time: Mar 15, 2021 3:56 PM
  * @Description: Modify Here, Please  
  */
 
@@ -27,7 +27,9 @@ protected:
     int numberOfRooms;
 
     std::vector<bool> seen;
-    std::vector<bool> tmpSeen;
+    std::vector<bool> possible;
+    std::vector<bool> kept;
+
     std::vector<int> roomStack;
 
     void addAllNext(int curRoom);
@@ -37,6 +39,8 @@ protected:
     bool checkPaths(int level, std::vector<Variable*>& touched);
 
     bool filterNodes(int level, std::vector<Variable*>& touched);
+
+    bool handleNode(int roomID);
 
 public:
     ConstraintGraph(std::string n, std::vector<Variable*> vars,
@@ -53,7 +57,8 @@ public:
     {
         numberOfRooms = entries.size();
         seen.resize(numberOfRooms);
-        tmpSeen.resize(numberOfRooms);
+        possible.resize(numberOfRooms);
+        kept.resize(numberOfRooms);
 
         for (size_t i = 0; i < matrix.size(); i++) {
             corridors.push_back(std::vector<Variable*>(matrix[i]));
