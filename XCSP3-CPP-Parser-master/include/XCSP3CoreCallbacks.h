@@ -491,6 +491,19 @@ namespace XCSP3Core {
                                         "You can use classical intension constrain by assigning recognizeSpecialIntensionCases to false ");
         }
 
+        /**
+         * If  #recognizeSpecialIntensionCases is enabled (this is the case by default)
+         * intensional constraint of the form : x*y=z are recognized
+         * If such a intensional constraint is recognized, a callback to this function is done and not to  #buildConstraintIntension
+         *
+         * @param id the id (name) of the constraint
+         * @param x,y,z  the variables
+         */
+        virtual void buildConstraintMult(string id, XVariable *x, XVariable *y, XVariable *z) {
+            (void)id; (void)x; (void)y; (void)z;
+            throw runtime_error("primitive constraint x*y=z  is not yet supported. "
+                                "You can use classical intension constrain by assigning recognizeSpecialIntensionCases to false ");
+        }
 
         //--------------------------------------------------------------------------------------
         // Language constraints
@@ -666,6 +679,23 @@ namespace XCSP3Core {
             throw runtime_error("Allequal constraint  is not yet supported");
         }
 
+
+        /**
+         * The callback function related to a allEqual constraint with expression
+         * See http://xcsp.org/specifications/allEqual
+         *
+         * Example:
+         * <allEqual>
+         *   add(q[0],0) add(q[1],1) add(q[2],2) add(q[3],3) add(q[4],4) add(q[5],5) add(q[6],6) add(q[7],7)
+         * </allEqual>
+         *
+         * @param id the id (name) of the constraint
+         * @param list the trees of the constraint
+          */
+        virtual void buildConstraintAllEqual(string id, vector<Tree *> &list) {
+            (void)id; (void)list;
+            throw runtime_error("AllEqual constraint with expression is not yet supported");
+        }
 
         /**
          * The callback function related to a not all equal constraint
@@ -1063,6 +1093,49 @@ namespace XCSP3Core {
             throw runtime_error("count with variables values constraint is not yet supported");
         }
 
+        /**
+         * The callback function related to a count constraint with expressions
+         * See http://xcsp.org/specifications/count
+         * Example:
+         * <count id="c1">
+         *     <list> eq(x,1) ne(z,2) </list>
+         *     <values> 2 </values>
+         *     <condition> (ne,k1) </condition>
+         * </count>
+         *
+         * @param id the id (name) of the constraint
+         * @param trees the trees
+         * @param value the set of  integer values
+         * @param k the  number of variables
+         * @param xc the condition (see #XCondition)
+         */
+        virtual void buildConstraintCount(string id, vector<Tree*> &trees, vector<int> &values, XCondition &xc) {
+            (void) id; (void) trees; (void) values; (void) xc;
+            throw runtime_error("count with trees and integer values is not yet supported");
+        }
+
+
+        /**
+         * The callback function related to a count constraint with expressions
+         * See http://xcsp.org/specifications/count
+         * Example:
+         * <count id="c1">
+         *     <list> eq(x,1) ne(z,2) </list>
+         *     <values> x1 </values>
+         *     <condition> (ne,k1) </condition>
+         * </count>
+         *
+         * @param id the id (name) of the constraint
+         * @param trees the trees
+         * @param value the set of  Variable values
+         * @param k the  number of variables
+         * @param xc the condition (see #XCondition)
+         */
+        virtual void buildConstraintCount(string id, vector<Tree*> &trees, vector<XVariable *> &values, XCondition &xc) {
+            (void) id; (void) trees; (void) values; (void) xc;
+            throw runtime_error("count with trees and variables values is not yet supported");
+        }
+
 
         /**
          * The callback function related to a nValues constraint with exception
@@ -1084,6 +1157,24 @@ namespace XCSP3Core {
             throw runtime_error("NValues with exception constraint is not yet supported");
         }
 
+        /**
+         * The callback function related to a nValues constraint with expressions
+         * See http://xcsp.org/specifications/nValues
+         * Example:
+         * <nValues id="c3">
+         *   <list> eq(z1,5) ne(z2,4) </list>
+         *    <condition> (eq,2) </condition>
+         * </nValues>
+         *
+         * @param id the id (name) of the constraint
+         * @param list the scope of the constraint
+         * @param except the set of excepted values
+         * @param xc the condition (see #XCondition)
+         */
+        virtual void buildConstraintNValues(string id, vector<Tree *> &trees, XCondition &xc) {
+            (void)id; (void)trees;  (void)xc;
+            throw runtime_error("NValues with expressions constraint is not yet supported");
+        }
 
         /**
          * The callback function related to a nValues constraint with exception
@@ -1348,7 +1439,6 @@ namespace XCSP3Core {
         virtual void buildConstraintMaximum(string id, vector<Tree*> &list, XCondition &xc) {
             (void)id; (void)list; (void)xc;
             throw runtime_error("maximum constraint over trees is not yet supported");
-
         }
 
         /**
@@ -1375,6 +1465,26 @@ namespace XCSP3Core {
         }
 
 
+        virtual void buildConstraintMaximumArg(string id, vector<Tree*> &list, RankType rank, XCondition &xc) {
+            (void)id; (void)list; (void)xc; (void)rank;
+            throw runtime_error("maximum Arg constraint over trees is not yet supported");
+        }
+
+        virtual void buildConstraintMaximumArg(string id, vector<XVariable*> &list, RankType rank, XCondition &xc) {
+            (void)id; (void)list; (void)xc; (void)rank;
+            throw runtime_error("maximum Arg constraint (variables) is not yet supported");
+        }
+
+        virtual void buildConstraintMinimumArg(string id, vector<Tree*> &list, RankType rank, XCondition &xc) {
+            (void)id; (void)list; (void)xc; (void)rank;
+            throw runtime_error("minimum Arg constraint over trees is not yet supported");
+        }
+
+        virtual void buildConstraintMinimumArg(string id, vector<XVariable*> &list, RankType rank, XCondition &xc) {
+            (void)id; (void)list; (void)xc; (void)rank;
+            throw runtime_error("minimum Arg constraint (variables) is not yet supported");
+        }
+
         /**
          * The callback function related to a element constraint with int value
          * See http://xcsp.org/specifications/element
@@ -1395,6 +1505,11 @@ namespace XCSP3Core {
         }
 
 
+        virtual void buildConstraintElement(string id, vector<XVariable *> &list, XVariable *index, int startIndex, XCondition &xc) {
+            (void)id; (void)list;(void)index;(void)startIndex;(void)xc;
+            throw runtime_error("Element constraint with condition is not yet supported");
+
+        }
          /**
          * The callback function related to a element constraint matrix
          * See http://xcsp.org/specifications/element
@@ -1964,6 +2079,12 @@ namespace XCSP3Core {
             throw runtime_error("cumulative (var lengths, var heights, ends) constraint is not yet supported");
         }
 
+
+
+        virtual void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, XCondition &cond) {
+            (void)id; (void)list; (void)sizes; (void)cond;
+            throw runtime_error("binPacking constraint  is not yet supported");
+        }
 //--------------------------------------------------------------------------------------
 // instantiation constraints
 //--------------------------------------------------------------------------------------
@@ -2039,7 +2160,7 @@ namespace XCSP3Core {
             (void)id;(void)entries;(void)actives;(void)finals;(void)exits;
             throw runtime_error("graph constraint not yet supported");
         }
-
+        
         /**
          * The callback function related to circuit   constraint with defined int size
          * See http://xcsp.org/specifications/circuit
@@ -2079,6 +2200,70 @@ namespace XCSP3Core {
         virtual void buildConstraintCircuit(string id, vector<XVariable *> &list, int startIndex, XVariable *size) {
             (void)id; (void)list; (void)startIndex; (void)size;
             throw runtime_error("circuit constraint not yet supported");
+        }
+
+        /**
+         * The callback function related to precedence   constraint with defined variable size
+         *
+         * Example:
+         * <precedence class="symmetry-breaking">
+         * <list> x[][] </list>
+         * <values> 1 2 </values>
+         * </precedence>
+         *
+         * @param id the id (name) of the constraint
+         * @param list the list of variables (not necessary the scope)
+         * @param values the different vaules
+         */
+        virtual void buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values) {
+            (void)id; (void)list; (void)values;
+            throw runtime_error("precedence constraint not yet supported");
+        }
+
+
+        /**
+         * The callback function related to flow  constraint
+         *
+         * @param id the id (name) of the constraint
+         * @param list the list of variables (not necessary the scope)
+         * @param balance the different vaules
+         * @param weights the different vaules
+         * @param arcs the different vaules
+         */
+        virtual void buildConstraintFlow(string id, vector<XVariable *> &list, vector<int> &balance, vector<int> &weights, vector<vector<int> > &arcs, XCondition &xc) {
+            (void)id; (void)list; (void)balance; (void) weights; (void) arcs; (void) xc;
+            throw runtime_error("flow constraint not yet supported");
+        }
+
+
+        /**
+         * The callback function related to knapsack  constraint
+         *
+         * @param id the id (name) of the constraint
+         * @param list the list of variables (not necessary the scope)
+         * @param profits
+         * @param weights
+         * @param limit an integer
+         * @param condition
+         */
+        virtual void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, int limit, XCondition &xc) {
+            (void)id; (void)list; (void)weights; (void) profits; (void) limit; (void) xc;
+            throw runtime_error("knapsack constraint with integer limit not yet supported");
+        }
+
+        /**
+         * The callback function related to knapsack  constraint
+         *
+         * @param id the id (name) of the constraint
+         * @param list the list of variables (not necessary the scope)
+         * @param profits
+         * @param weights
+         * @param limit an integer
+         * @param condition
+         */
+        virtual void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, XVariable* limit, XCondition &xc) {
+            (void)id; (void)list; (void)weights; (void) profits; (void) limit; (void) xc;
+            throw runtime_error("knapsack constraint with variable limitnot yet supported");
         }
 
 //--------------------------------------------------------------------------------------

@@ -197,6 +197,7 @@ namespace XCSP3Core {
         vector<XVariable *> args;   // used to store a list of args
         vector<XVariable *> values; // used to store a list of variables
         vector<XVariable *> occurs;   // used in cardinality
+        vector<XVariable *> weights;   // used in flow
 
         vector<int> integers;  // used to store a list of coefficients
 
@@ -649,7 +650,17 @@ namespace XCSP3Core {
             void endTag() override;
         };
 
+        /***************************************************************************
+           * Actions performed on binPacking tag
+           ****************************************************************************/
 
+        class BinPackingTagAction : public BasicConstraintTagAction {
+        public:
+            XConstraintBinPacking *constraint;
+            BinPackingTagAction(XMLParser *parser, string name) : BasicConstraintTagAction(parser, name) { }
+            void beginTag(const AttributeList &attributes) override;
+            void endTag() override;
+        };
         /***************************************************************************
          ****************************************************************************
           *                            OBJECTIVES
@@ -927,12 +938,14 @@ namespace XCSP3Core {
          ****************************************************************************/
 
         class TransitionsTagAction : public TagAction {
+            UTF8String transitions;
         public:
             int nb, val;
             std::string from, to;
             TransitionsTagAction(XMLParser *parser, string name) : TagAction(parser, name) { }
             void beginTag(const AttributeList &attributes) override;
             void text(const UTF8String txt, bool last) override;
+            void endTag() override;
         };
 
 
@@ -969,6 +982,45 @@ namespace XCSP3Core {
         };
 
         /***************************************************************************
+         * Actions performed on  PRECEDENCE tag
+        ****************************************************************************/
+
+
+        class PrecedenceTagAction : public BasicConstraintTagAction {
+            XConstraintPrecedence *constraint;
+        public:
+            PrecedenceTagAction(XMLParser *parser, string name) : BasicConstraintTagAction(parser, name) { }
+            void beginTag(const AttributeList &attributes) override;
+            void text(const UTF8String txt, bool last) override;
+            void endTag() override;
+        };
+
+        /***************************************************************************
+         * Actions performed on  Flow TAG
+         ****************************************************************************/
+
+        class FlowTagAction : public BasicConstraintTagAction {
+            XConstraintFlow *constraint;
+        public:
+            FlowTagAction(XMLParser *parser, string name) : BasicConstraintTagAction(parser, name) { }
+            void beginTag(const AttributeList &attributes) override;
+            void endTag() override;
+        };
+
+        /***************************************************************************
+         * Actions performed on  Knapsack TAG
+         ****************************************************************************/
+
+        class KnapsackTagAction : public BasicConstraintTagAction {
+            XConstraintKnapsack *constraint;
+        public:
+            KnapsackTagAction(XMLParser *parser, string name) : BasicConstraintTagAction(parser, name) { }
+            void beginTag(const AttributeList &attributes) override;
+            void endTag() override;
+        };
+
+
+        /***************************************************************************
          * Actions performed on  ANNOTATIONS TAG
         ****************************************************************************/
 
@@ -988,6 +1040,8 @@ namespace XCSP3Core {
             void text(const UTF8String txt, bool last) override;
             void endTag() override;
         };
+
+        
 
 
     public:

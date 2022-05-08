@@ -442,6 +442,11 @@ void XConstraintGroup::unfoldArgumentNumber(int i, XConstraint *builtConstraint)
 }
 
 
+void XConstraintAllDiff::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
+    XConstraint::unfoldParameters(group, arguments, original);
+    XValues::unfoldParameters(group, arguments, original);
+}
+
 void XConstraintAllDiffMatrix::unfoldParameters(XConstraintGroup *, vector<XVariable *> &, XConstraint *) {
     throw runtime_error("Group Alldiff Matrix and list is not yet supported");
 }
@@ -507,7 +512,10 @@ void XConstraintElement::unfoldParameters(XConstraintGroup *group, vector<XVaria
     XConstraintElement *xc = dynamic_cast<XConstraintElement *>(original);
     XConstraint::unfoldParameters(group, arguments, original);
     XIndex::unfoldParameters(group, arguments, original);
-    XValue::unfoldParameters(group, arguments, original);
+    if(xc->value != nullptr)
+        XValue::unfoldParameters(group, arguments, original);
+    else
+        XInitialCondition::unfoldParameters(group, arguments, original);
     startIndex = xc->startIndex;
     rank = xc->rank;
 }
@@ -560,6 +568,14 @@ void XConstraintCumulative::unfoldParameters(XConstraintGroup *group, vector<XVa
 }
 
 
+void XConstraintBinPacking::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
+    XConstraintBinPacking *xc = dynamic_cast<XConstraintBinPacking *>(original);
+    XConstraint::unfoldParameters(group, arguments, original);
+    XValues::unfoldParameters(group, arguments, original);
+    XInitialCondition::unfoldParameters(group, arguments, original);
+}
+
+
 void XConstraintStretch::unfoldParameters(XConstraintGroup *, vector<XVariable *> &, XConstraint *) {
     throw runtime_error("group is not yet allowed with stretch constraint");
 }
@@ -588,6 +604,37 @@ void XConstraintClause::unfoldParameters(XConstraintGroup *group, vector<XVariab
 
     }
 }
+
+
+
+void XConstraintPrecedence::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
+    XConstraintPrecedence *xc = dynamic_cast<XConstraintPrecedence *>(original);
+    XConstraint::unfoldParameters(group, arguments, original);
+    XValues::unfoldParameters(group, arguments, original);
+}
+
+void XConstraintFlow::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
+    XConstraintFlow *xc = dynamic_cast<XConstraintFlow *>(original);
+
+    XConstraint::unfoldParameters(group, arguments, original);
+    XInitialCondition::unfoldParameters(group, arguments, original);
+    group->unfoldVector(weights, arguments, xc->weights);
+    group->unfoldVector(balance, arguments, xc->balance);
+}
+
+
+
+
+void XConstraintKnapsack::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
+    XConstraintKnapsack *xc = dynamic_cast<XConstraintKnapsack *>(original);
+    XConstraint::unfoldParameters(group, arguments, original);
+    XValue::unfoldParameters(group, arguments, original);
+    XInitialCondition::unfoldParameters(group, arguments, original);
+    group->unfoldVector(profits, arguments, xc->profits);
+    group->unfoldVector(weights, arguments, xc->weights);
+}
+
+
 
 //------------------------------------------------------------------------------------------
 //  XCSP3Utils.h functions

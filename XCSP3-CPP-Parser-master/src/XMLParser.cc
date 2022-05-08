@@ -59,7 +59,9 @@ void XMLParser::startElement(UTF8String name, const AttributeList &attributes) {
     } else {
         // add a handler to ignore the text and end element
         action = unknownTagHandler;
-        cerr << "unknown tag " << name << endl;
+        std::string tmp;
+        name.to(tmp);
+        throw runtime_error("c unknown tag " + tmp);
     }
 
     stateStack.push_front(State());
@@ -220,16 +222,31 @@ void XMLParser::parseSequence(const UTF8String &txt, vector<XVariable *> &list, 
                 if(dotdot == string::npos) {
                     int nb;
                     try { // An integer
-                        nb = std::stoi(current);
-                        XInteger *xi = new XInteger(current, nb);
-                        list.push_back(xi);
-                        toFree.push_back(xi);
-
+                        vector<string> compact;
+                        split(current, 'x', compact);
+                        if(compact.size() == 2) {
+                            nb = compact[0] == "*" ? STAR : std::stoi(compact[0]);
+                            int sz;
+                            sz = std::stoi(compact[1]);
+                            for(int k = 0; k < sz; k++) {
+                                XInteger *xi = new XInteger(compact[0], nb);
+                                list.push_back(xi);
+                            }
+                        } else {
+                            nb = std::stoi(current);
+                            XInteger *xi = new XInteger(current, nb);
+                            list.push_back(xi);
+                            toFree.push_back(xi);
+                        }
                     } catch(invalid_argument &e) {
-                        if(variablesList[current] != NULL)
-                            list.push_back((XVariable *) variablesList[current]);
-                        else
-                            throw runtime_error("unknown variable: " + current);
+                        if(current == "*")
+                            list.push_back(new XInteger(current, STAR));
+                        else {
+                            if (variablesList[current] != NULL)
+                                list.push_back((XVariable *) variablesList[current]);
+                            else
+                                throw runtime_error("unknown variable: " + current);
+                        }
                     }
                 } else { // A range
                     int first = std::stoi(current.substr(0, dotdot));
@@ -435,6 +452,9 @@ XMLParser::XMLParser(XCSP3CoreCallbacks *cb) {
 
     registerTagAction(tagList, new OperatorTagAction(this, "operator"));
 
+    registerTagAction(tagList, new BinPackingTagAction(this, "binPacking"));
+
+
     registerTagAction(tagList, new RegularTagAction(this, "regular"));
     registerTagAction(tagList, new MDDTagAction(this, "mdd"));
     registerTagAction(tagList, new StringTagAction(this, "start"));
@@ -449,7 +469,7 @@ XMLParser::XMLParser(XCSP3CoreCallbacks *cb) {
     registerTagAction(tagList, new MinimizeOrMaximizeTagAction(this, "minimize"));
     registerTagAction(tagList, new MinimizeOrMaximizeTagAction(this, "maximize"));
 
-    registerTagAction(tagList, new ListOfIntegerTagAction(this, "except"));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "except", this->values));
     registerTagAction(tagList, new MatrixTagAction(this, "matrix"));
 
     registerTagAction(tagList, new BlockTagAction(this, "block"));
@@ -457,14 +477,33 @@ XMLParser::XMLParser(XCSP3CoreCallbacks *cb) {
 
     registerTagAction(tagList, new CircuitTagAction(this, "circuit"));
     registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "size", this->values));
-
-    // for graph
+    
+        // for graph
     registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "entries", this->entries));
     registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "exits", this->exits));
     registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "finals", this->finals));
     registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "actives", this->actives));
     registerTagAction(tagList, new GraphTagAction(this, "graph"));
+    
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "sizes", this->values));
 
+    registerTagAction(tagList, new PrecedenceTagAction(this, "precedence"));
+
+
+    // Flow
+    registerTagAction(tagList, new FlowTagAction(this, "flow"));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "balance", this->values));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "weights", this->weights));
+    registerTagAction(tagList, new OriginsTagAction(this, "arcs", this->lengths));
+
+
+    // Knapsack
+    registerTagAction(tagList, new KnapsackTagAction(this, "knapsack"));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "profits", this->heights));
+    registerTagAction(tagList, new ListOfVariablesOrIntegerTagAction(this, "limit", this->values));
+
+    registerTagAction(tagList, new MinMaxTagAction(this, "maximumArg"));
+    registerTagAction(tagList, new MinMaxTagAction(this, "minimumArg"));
 
 
 }
