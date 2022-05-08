@@ -3,15 +3,15 @@
 *
 * This file is part of Nacre_mini
 *
-* Nacre_mini is free software: you can redistribute it and/or modify it 
-* under the terms of the GNU General Public License as published by the Free Software Foundation, 
+* Nacre_mini is free software: you can redistribute it and/or modify it
+* under the terms of the GNU General Public License as published by the Free Software Foundation,
 * either version 3 of the License, or (at your option) any later version.
 *
-* Nacre_mini is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
-* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+* Nacre_mini is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 * See the GNU General Public License for more details.
 *
-* You should have received a copy of the GNU General Public License along with Nacre_mini. 
+* You should have received a copy of the GNU General Public License along with Nacre_mini.
 * If not, see http://www.gnu.org/licenses/.
 *
 * Contributors:
@@ -23,9 +23,9 @@
  * @CreateTime: Sep 26, 2017 2:50 PM
  * @Author: Gaël Glorian
  * @Contact: glorian@cril.fr
-* @Last Modified By: Gaël Glorian
-* @Last Modified Time: Dec 18, 2020 11:40 AM
- * @Description: Modify Here, Please 
+ * @Last Modified By: Gaël Glorian
+ * @Last Modified Time: Dec 18, 2020 11:40 AM
+ * @Description: Modify Here, Please
  */
 
 #ifndef ARCH_XCSP3Callbacks_H
@@ -185,6 +185,7 @@ public:
     virtual void buildConstraintChannel(string id, vector<XVariable*>& list1, int startIndex1, vector<XVariable*>& list2, int startIndex2) override;
 
     virtual void buildConstraintElement(string id, vector<int>& list, int startIndex, XVariable* index, RankType rank, XVariable* value) override;
+    virtual void buildConstraintElement(string id, vector<XVariable*>& list, XVariable* index, int startIndex, XCondition& xc) override;
     virtual void buildConstraintElement(string id, vector<XVariable*>& list, int startIndex, XVariable* index, RankType rank, int value) override;
     virtual void buildConstraintElement(string id, vector<XVariable*>& list, int startIndex, XVariable* index, RankType rank, XVariable* value) override;
     virtual void buildConstraintElement(string id, vector<XVariable*>& list, int value) override;
@@ -489,7 +490,7 @@ void XCSP3Callbacks::buildConstraintIntension(string id, Tree* tree)
     vecCont.push_back(newCont);
 }
 
-//Recognize constraint with the form  x +- k op y (op \in {eq, le, lt, ge, gt, ne}.
+// Recognize constraint with the form  x +- k op y (op \in {eq, le, lt, ge, gt, ne}.
 void XCSP3Callbacks::buildConstraintPrimitive(string id, OrderType op, XVariable* x, int k, XVariable* y)
 {
     switch (op) {
@@ -749,7 +750,10 @@ void XCSP3Callbacks::buildConstraintSum(string id, vector<XVariable*>& list, XCo
 
 OrderType invertOp(OrderType op)
 {
-    return op == LT ? GT : op == LE ? GE : op == GE ? LE : op == GT ? LT : op;
+    return op == LT ? GT : op == LE ? GE
+        : op == GE                  ? LE
+        : op == GT                  ? LT
+                                    : op;
 }
 
 void XCSP3Callbacks::buildConstraintSum(string id, vector<XVariable*>& list, vector<int>& coefficients, XCondition& cond)
@@ -1306,6 +1310,45 @@ void XCSP3Callbacks::buildConstraintElement(string id, vector<int>& list, int st
     vecBtConst.push_back(newCont);
 }
 
+// typedef enum order {
+//     LE, LT, GE, GT, IN, EQ, NE
+// } OrderType;
+// typedef enum operantype {
+//     INTEGER, INTERVAL, VARIABLE
+// } OperandType;
+
+void XCSP3Callbacks::buildConstraintElement(string id, vector<XVariable*>& list, XVariable* index, int startIndex, XCondition& xc)
+{
+    switch (xc.op) {
+    case EQ:
+        list.push_back(index);
+        if (xc.operandType == VARIABLE) {
+            vector<Variable*> vars;
+            toMyVariables(list, vars);
+            Variable* var = mapping[xc.var];
+            if (!var)
+                throw runtime_error("Unknow value " + xc.var);
+            vars.push_back(var);
+            vecCont.push_back(new ConstraintElementVariable(id, vars, vars.size() - 2, startIndex));
+        } else {
+            vector<Variable*> vars;
+            toMyVariables(list, vars);
+            vecCont.push_back(new ConstraintElementConstant(id, vars, vars.size() - 1, xc.val, startIndex));
+        }
+        break;
+    case LT:
+    case LE:
+    case GT:
+    case GE:
+    case NE:
+    case IN:
+    default:
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Operator not supported for Element condition");
+        break;
+    }
+}
+
 void XCSP3Callbacks::buildConstraintElement(string id, vector<XVariable*>& list, int startIndex, XVariable* i, RankType rank, int value)
 {
     list.push_back(i);
@@ -1522,4 +1565,4 @@ Solver* create_solver(int seed, int argc, char** argv)
     exit(0);
 }
 
-#endif //ARCH_XCSP3Callbacks_H
+#endif // ARCH_XCSP3Callbacks_H
