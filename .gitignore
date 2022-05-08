@@ -19,3 +19,4 @@ GSYMS
 generator
 nacre*
 Tests/*
+checkingInstances/*
