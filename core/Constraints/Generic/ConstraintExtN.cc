@@ -110,9 +110,9 @@ bool ConstraintExtN::propagate(int level, Variable* cur, vector<Variable*>& touc
         sSup.push_back(i);
         v->cleanDBU();
 
-        if (v->domainCurSize != lastSize[i] || v->lastPushed) {
+        if (v->ctrStamp != lastSize[i] || v->lastPushed) {
             sVal.push_back(i);
-            lastSize[i] = v->domainCurSize;
+            lastSize[i] = v->ctrStamp;
         }
     }
 
@@ -148,7 +148,7 @@ bool ConstraintExtN::propagate(int level, Variable* cur, vector<Variable*>& touc
         if (before != scope[i]->domainCurSize)
             touched.push_back(scope[i]);
 
-        lastSize[i] = scope[i]->domainCurSize;
+        lastSize[i] = scope[i]->ctrStamp;
     }
 
     return false;

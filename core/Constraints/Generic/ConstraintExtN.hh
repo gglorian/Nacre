@@ -37,7 +37,7 @@
 struct ExtSave {
     int level;
     size_t sizeDom;
-    std::vector<int> lastSize;
+    std::vector<unsigned long long> lastSize;
 };
 
 class ConstraintExtN : public Constraint {
@@ -51,7 +51,7 @@ private:
 
     std::stack<ExtSave> saveSize;
     std::vector<size_t> position;
-    std::vector<int> lastSize;
+    std::vector<unsigned long long> lastSize;
 
     void restoreTuples(int level);
     void removeTuple(size_t tuplePos, int level);
