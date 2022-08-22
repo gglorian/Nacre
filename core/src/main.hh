@@ -95,6 +95,8 @@ public:
     virtual void buildConstraintPrimitive(string id, OrderType op, XVariable* x, int k) override;
     virtual void buildConstraintPrimitive(string id, XVariable* x, bool in, int min, int max) override;
 
+    virtual void buildConstraintMult(string id, XVariable *x, XVariable *y, XVariable *z) override;
+
     // LANGUAGE
     virtual void buildConstraintRegular(string id, vector<XVariable*>& list, string st, vector<string>& final, vector<XTransition>& transitions) override
     {
@@ -559,6 +561,10 @@ void XCSP3Callbacks::buildConstraintPrimitive(string id, XVariable* x, bool in, 
             throw runtime_error("Domain wipeout of " + x->id + " during parsing");
         }
     }
+}
+
+void XCSP3Callbacks::buildConstraintMult(string id, XVariable *x, XVariable *y, XVariable *z) {
+  buildConstraintIntension(id, new Tree("eq(mul(" + x->id + "," + y->id + ")" + z->id + ")"));
 }
 
 void XCSP3Callbacks::buildConstraintAllEqual(string id, vector<XVariable*>& list)
@@ -1130,10 +1136,12 @@ void XCSP3Callbacks::buildConstraintAtMost(string id, vector<XVariable*>& list, 
     }
 
     int sz = vars.size();
-    if (k < 0 || k >= sz) {
+    if (k < 0) {
         std::cout << "s UNSATISFIABLE" << endl;
         throw runtime_error("UNSAT by default");
-    } else if (k == 0) {
+    } else if (k >= sz)
+        return;
+    else if (k == 0) {
         for (auto v : vars)
             if (v->removeValue(value)) {
                 std::cout << "s UNSATISFIABLE" << endl;
