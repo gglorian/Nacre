@@ -20,3 +20,4 @@ generator
 nacre*
 Tests/*
 checkingInstances/*
+objs/*

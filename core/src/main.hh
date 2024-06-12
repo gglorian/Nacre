@@ -448,12 +448,23 @@ void createExt(string id, vector<XVariable*>& list, vector<vector<int>>& tuples,
     vector<Variable*> vars;
     toMyVariables(list, vars);
 
-    vector<vector<ind>> t(tuples.size());
+    vector<vector<ind>> t;
+    t.reserve(tuples.size());
     for (size_t i = 0; i < tuples.size(); ++i) {
         vector<ind> tmp;
-        for (size_t j = 0; j < tuples[i].size(); ++j)
-            tmp.push_back((tuples[i][j] == STAR ? STAR : vars[j]->getVarPropIndFromValue(tuples[i][j])));
-        t[i] = tmp;
+        bool bypass_tuples = false;
+        for (size_t j = 0; j < tuples[i].size(); ++j) {
+            if (tuples[i][j] == STAR)
+                tmp.push_back(STAR);
+            else if (vars[j]->isValidValue(tuples[i][j]))
+                tmp.push_back(vars[j]->getVarPropIndFromValue(tuples[i][j]));
+            else {
+                bypass_tuples = true;
+                break;
+            }
+        }
+        if (!bypass_tuples)
+            t.push_back(tmp);
     }
 
     if (list.size() == 2) {
