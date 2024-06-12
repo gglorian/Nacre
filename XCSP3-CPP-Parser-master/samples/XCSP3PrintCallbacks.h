@@ -229,15 +229,41 @@ namespace XCSP3Core {
 
         void buildConstraintCircuit(string id, vector<XVariable *> &list, int startIndex, XVariable *size) override;
 
-        void buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values) override;
+        void buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values, bool covered) override;
 
         void buildConstraintBinPacking(string id, vector<XVariable *> &list, vector<int> &sizes, XCondition &cond) override;
 
         void buildConstraintFlow(string id, vector<XVariable *> &list, vector<int> &balance, vector<int> &weights, vector<vector<int> > &arcs, XCondition &xc) override;
 
-        void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, int limit, XCondition &xc) override;
+        void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits,XCondition weightsCondition, XCondition &profitCondition) override;
 
-        void buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, XVariable *limit, XCondition &xc) override;
+        void
+        buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths, vector<int> &heights,
+                                  XCondition &xc) override;
+
+        void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths,
+                                       vector<XVariable *> &varHeights, XCondition &xc) override;
+
+        void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                       vector<int> &heights, XCondition &xc) override;
+
+        void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                       vector<XVariable *> &heights, XCondition &xc) override;
+
+        void
+        buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths, vector<int> &heights,
+                                  vector<XVariable *> &ends, XCondition &xc) override;
+
+        void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths,
+                                       vector<XVariable *> &varHeights, vector<XVariable *> &ends,
+                                       XCondition &xc) override;
+
+        void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                       vector<int> &heights, vector<XVariable *> &ends, XCondition &xc) override;
+
+        void buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                       vector<XVariable *> &heights, vector<XVariable *> &ends,
+                                       XCondition &xc) override;
 
         void buildObjectiveMinimizeExpression(string expr) override;
 
@@ -263,6 +289,9 @@ namespace XCSP3Core {
 
 
         void buildAnnotationDecision(vector<XVariable*> &list) override;
+
+        void buildConstraintCount(string id, vector<Tree *> &trees, vector<int> &values, XCondition &xc) override;
+
         bool canonize;
 
         virtual void buildConstraintGraph(string id, vector<vector<XVariable *>> &matrix, vector<XVariable *> &entries, vector<XVariable *> &exits, vector<XVariable *> &actives,
@@ -284,7 +313,7 @@ void displayList(vector<T> &list, string separator = " ") {
         for(int i = 0; i < 3; i++)
             cout << list[i] << separator;
         cout << " ... ";
-        for(unsigned int i = list.size() - 4; i < list.size(); i++)
+        for(decltype(list.size()) i = list.size() - 4; i < list.size(); i++)
             cout << list[i] << separator;
         cout << endl;
         return;
@@ -300,7 +329,7 @@ void displayList(vector<XVariable *> &list, string separator = " ") {
         for(int i = 0; i < 3; i++)
             cout << list[i]->id << separator;
         cout << " ... ";
-        for(unsigned int i = list.size() - 4; i < list.size(); i++)
+        for(decltype(list.size()) i = list.size() - 4; i < list.size(); i++)
             cout << list[i]->id << separator;
         cout << endl;
         return;
@@ -617,10 +646,10 @@ void XCSP3PrintCallbacks::buildConstraintSum(string, vector<XVariable *> &list, 
         for(int i = 0; i < 3; i++)
             cout << (coeffs.size() == 0 ? 1 : coeffs[i]) << "*" << *(list[i]) << " ";
         cout << " ... ";
-        for(unsigned int i = list.size() - 4; i < list.size(); i++)
+        for(decltype(list.size()) i = list.size() - 4; i < list.size(); i++)
             cout << (coeffs.size() == 0 ? 1 : coeffs[i]) << "*" << *(list[i]) << " ";
     } else {
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(decltype(list.size()) i = 0; i < list.size(); i++)
             cout << (coeffs.size() == 0 ? 1 : coeffs[i]) << "*" << *(list[i]) << " ";
     }
     cout << cond << endl;
@@ -644,10 +673,10 @@ void XCSP3PrintCallbacks::buildConstraintSum(string, vector<XVariable *> &list, 
         for(int i = 0; i < 3; i++)
             cout << coeffs[i]->id << "*" << *(list[i]) << " ";
         cout << " ... ";
-        for(unsigned int i = list.size() - 4; i < list.size(); i++)
+        for(decltype(list.size()) i = list.size() - 4; i < list.size(); i++)
             cout << coeffs[i]->id << "*" << *(list[i]) << " ";
     } else {
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(decltype(list.size()) i = 0; i < list.size(); i++)
             cout << coeffs[i]->id << "*" << *(list[i]) << " ";
     }
     cout << cond << endl;
@@ -662,12 +691,12 @@ void XCSP3PrintCallbacks::buildConstraintSum(string id, vector<Tree *> &list, ve
             list[i]->prefixe();
         }
         cout << " ... ";
-        for(unsigned int i = list.size() - 4; i < list.size(); i++) {
+        for(decltype(list.size()) i = list.size() - 4; i < list.size(); i++) {
             cout << coeffs[i];
             list[i]->prefixe();
         }
     } else {
-        for(unsigned int i = 0; i < list.size(); i++) {
+        for(decltype(list.size()) i = 0; i < list.size(); i++) {
             cout << coeffs[i];
             list[i]->prefixe();
         }
@@ -681,11 +710,11 @@ void XCSP3PrintCallbacks::buildConstraintSum(string id, vector<Tree *> &list, XC
             list[i]->prefixe();
         }
         cout << " ... ";
-        for(unsigned int i = list.size() - 4; i < list.size(); i++) {
+        for(decltype(list.size()) i = list.size() - 4; i < list.size(); i++) {
             list[i]->prefixe();
         }
     } else {
-        for(unsigned int i = 0; i < list.size(); i++) {
+        for(decltype(list.size()) i = 0; i < list.size(); i++) {
             list[i]->prefixe();
         }
     }
@@ -1042,7 +1071,7 @@ void XCSP3PrintCallbacks::buildConstraintNoOverlap(string, vector<XVariable *> &
 
 // string id, vector<XVariable *> &origins, vector<XVariable *> &lengths, bool zeroIgnored
 void XCSP3PrintCallbacks::buildConstraintNoOverlap(string, vector<XVariable *> &origins, vector<XVariable *> &lengths, bool) {
-    cout << "\n    nooverlap constraint" << endl;
+    cout << "\n    nooverlap constraint (origins and lenghts variables)" << endl;
     cout << "        origins:";
     displayList(origins);
     cout << "        lengths";
@@ -1114,33 +1143,6 @@ void XCSP3PrintCallbacks::buildConstraintCircuit(string, vector<XVariable *> &li
 }
 
 
-void XCSP3PrintCallbacks::buildConstraintGraph(string id, vector<vector<XVariable *>> &matrix, vector<XVariable *> &entries, vector<XVariable *> &exits, vector<XVariable *> &actives,
-                          vector<XVariable *> &finals) {
-    cout << "\n    graph  constraint" << id << endl;
-
-    cout << "\n    Matrix" << id << endl;
-
-    for(unsigned int i = 0; i < matrix.size(); i++) {
-        cout << "        ";
-        displayList(matrix[i]);
-    }
-
-    cout << "\n    entries" << id << endl;
-    displayList(entries);
-
-    cout << "\n    exits" << id << endl;
-    displayList(exits);
-
-    cout << "\n    actives" << id << endl;
-    displayList(actives);
-
-    cout << "\n    finals" << id << endl;
-    displayList(finals);
-
-
-
-}
-
 // string id, vector<XVariable *> &list, int startIndex, int size
 void XCSP3PrintCallbacks::buildConstraintCircuit(string, vector<XVariable *> &list, int startIndex, int size) {
     cout << "\n    circuit constraint" << endl;
@@ -1160,12 +1162,17 @@ void XCSP3PrintCallbacks::buildConstraintCircuit(string, vector<XVariable *> &li
     cout << "        size: " << size->id << endl;
 }
 
-void XCSP3PrintCallbacks::buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values) {
+void XCSP3PrintCallbacks::buildConstraintPrecedence(string id, vector<XVariable *> &list, vector<int> values, bool covered) {
     cout << "\n    Precedence constraint" << endl;
     cout << "        list:";
     displayList(list);
     cout << "        values: ";
     displayList(values);
+    cout << "        covered?  " << covered << endl;
+}
+
+void XCSP3PrintCallbacks::buildConstraintCount(string id, vector<Tree *> &trees, vector<int> &values, XCondition &xc) {
+    cout << "\n    Count constraint with trees and integer values" << endl;
 }
 
 
@@ -1195,7 +1202,7 @@ void XCSP3PrintCallbacks::buildConstraintFlow(string id, vector<XVariable *> &li
     cout << "        condition:" << cond << endl;
 
 }
-void XCSP3PrintCallbacks::buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, int limit, XCondition &xc) {
+void XCSP3PrintCallbacks::buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits,XCondition weightsCondition, XCondition &profitCondition) {
     cout << "\n    Knapsack constraint with integer limit" << endl;
     cout << "        list:";
     displayList(list);
@@ -1203,23 +1210,10 @@ void XCSP3PrintCallbacks::buildConstraintKnapsack(string id, vector<XVariable *>
     displayList(profits);
     cout << "        weights: ";
     displayList(weights);
-    cout << "        limit: " << limit << endl;
-    cout << "        condition:" << xc << endl;
-
+    cout << "        weightsConditions: " << weightsCondition << endl;
+    cout << "        profitscondition:" << profitCondition << endl;
 }
 
-void XCSP3PrintCallbacks::buildConstraintKnapsack(string id, vector<XVariable *> &list, vector<int> &weights, vector<int> &profits, XVariable *limit, XCondition &xc) {
-    cout << "\n    Knapsack constraint with variable limit" << endl;
-    cout << "        list:";
-    displayList(list);
-    cout << "        profits: ";
-    displayList(profits);
-    cout << "        weights: ";
-    displayList(weights);
-    cout << "        limit: " << limit->id << endl;
-    cout << "        condition:" << xc << endl;
-
-}
 
 
 void XCSP3PrintCallbacks::buildObjectiveMinimizeExpression(string expr) {
@@ -1266,6 +1260,116 @@ void XCSP3PrintCallbacks::buildAnnotationDecision(vector<XVariable*> &list) {
     std::cout << "       decision variables" << std::endl<< "       ";
     displayList(list);
 
+}
+
+void XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths,
+                                                    vector<XVariable *> &varHeights, XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(varHeights);
+    cout << "        condition:" << xc << endl;
+}
+
+void
+XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                               vector<int> &heights, XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(heights);
+    cout << "        condition:" << xc << endl;
+}
+
+void
+XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                               vector<XVariable *> &heights, XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(heights);
+    cout << "        condition:" << xc << endl;
+}
+
+void XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths,
+                                                    vector<int> &heights, vector<XVariable *> &ends, XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(heights);
+    cout << "        ends:";
+    displayList(ends);
+    cout << "        condition:" << xc << endl;
+}
+
+void XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths,
+                                                    vector<XVariable *> &varHeights, vector<XVariable *> &ends,
+                                                    XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(varHeights);
+    cout << "        ends:";
+    displayList(ends);
+    cout << "        condition:" << xc << endl;
+}
+
+void
+XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                               vector<int> &heights, vector<XVariable *> &ends, XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(heights);
+    cout << "        ends:";
+    displayList(ends);
+    cout << "        condition:" << xc << endl;
+}
+
+void
+XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<XVariable *> &lengths,
+                                               vector<XVariable *> &heights, vector<XVariable *> &ends,
+                                               XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(heights);
+    cout << "        ends:";
+    displayList(ends);
+    cout << "        condition:" << xc << endl;
+}
+
+void XCSP3PrintCallbacks::buildConstraintCumulative(string id, vector<XVariable *> &origins, vector<int> &lengths,
+                                                    vector<int> &heights, XCondition &xc) {
+    cout << "\n    Cumulative constraint" << endl;
+    cout << "        list:";
+    displayList(origins);
+    cout << "        lengths:";
+    displayList(lengths);
+    cout << "        heights:";
+    displayList(heights);
+    cout << "        condition:" << xc << endl;
 }
 
 #endif //COSOCO_XCSP3PRINTCALLBACKS_H

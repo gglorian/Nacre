@@ -907,10 +907,11 @@ void XCSP3Manager::newConstraintElement(XConstraintElement *constraint) {
         }
     }
     if(constraint->value == nullptr) {
-        if(listOfIntegers.size() > 0)
-            throw runtime_error("Not yet supported");
         XCondition xc;
         constraint->extractCondition(xc);
+        if(listOfIntegers.size() > 0)
+            callback->buildConstraintElement(constraint->id, listOfIntegers, constraint->index, constraint->startIndex, xc);
+        else
         callback->buildConstraintElement(constraint->id, constraint->list, constraint->index, constraint->startIndex, xc);
         return;
     }
@@ -1069,7 +1070,7 @@ void XCSP3Manager::newConstraintNoOverlapKDim(XConstraintNoOverlap *constraint) 
     }
 
 
-    if(isInt > 0)
+    if(isInt)
         callback->buildConstraintNoOverlap(constraint->id, origins, intLengths, constraint->zeroIgnored);
     else
         callback->buildConstraintNoOverlap(constraint->id, origins, varLengths, constraint->zeroIgnored);
@@ -1131,12 +1132,15 @@ void XCSP3Manager::newConstraintCumulative(XConstraintCumulative *constraint) {
                                             constraint->ends, xc);
 }
 
-
+// if loads=true, capacities are loads (operator =), otherwise capacities are limits (operator <=)
 void XCSP3Manager::newConstraintBinPacking(XConstraintBinPacking *constraint) {
     if(discardedClasses(constraint->classes))
         return;
     int v;
     vector<int> sizes;
+    vector<int> capacitiesInt;
+    vector<XVariable*> capacitiesVars;
+
 
     for(XEntity *xe: constraint->values) {
         if(isInteger(xe, v))
@@ -1144,6 +1148,58 @@ void XCSP3Manager::newConstraintBinPacking(XConstraintBinPacking *constraint) {
         else
             throw runtime_error("in binPacking constraint: sizes must be integers");
     }
+    if(constraint->limits.size() > 0) {
+        for(XEntity *xe: constraint->limits) {
+            if(isInteger(xe, v))
+                capacitiesInt.push_back(v);
+            else {
+                XVariable *xv = (XVariable *) xe;
+                capacitiesVars.push_back(xv);
+            }
+        }
+        if(capacitiesVars.size() > 0 && capacitiesInt.size() > 0)
+            throw runtime_error("In bickpacking, limits must all have the same type");
+        if(capacitiesInt.size() > 0)
+            callback->buildConstraintBinPacking(constraint->id, constraint->list, sizes, capacitiesInt, false);
+        else
+            callback->buildConstraintBinPacking(constraint->id, constraint->list, sizes, capacitiesVars, false);
+        return;
+    }
+
+    if(constraint->loads.size() > 0) {
+        for(XEntity *xe: constraint->loads) {
+            if(isInteger(xe, v))
+                capacitiesInt.push_back(v);
+            else {
+                XVariable *xv = (XVariable *) xe;
+                capacitiesVars.push_back(xv);
+            }
+        }
+        if(capacitiesVars.size() > 0 && capacitiesInt.size() > 0)
+            throw runtime_error("In bickpacking, loads must all have the same type");
+        if(capacitiesInt.size() > 0)
+            callback->buildConstraintBinPacking(constraint->id, constraint->list, sizes, capacitiesInt, true);
+        else
+            callback->buildConstraintBinPacking(constraint->id, constraint->list, sizes, capacitiesVars, true);
+        return;
+    }
+    constraint->conditions = trim(constraint->conditions);
+    if(!constraint->conditions.empty()) {
+        vector<XCondition> conditions;
+        string current = "";
+        for(char c : constraint->conditions) {
+            current += c;
+            if(c == ')') {
+                XCondition xc;
+                XInitialCondition::extract(xc, current);
+                conditions.push_back(xc);
+                current = "";
+            }
+        }
+        callback->buildConstraintBinPacking(constraint->id, constraint->list, sizes, conditions, constraint->startIndex);
+        return;
+    }
+
 
     XCondition xc;
     constraint->extractCondition(xc);
@@ -1157,7 +1213,13 @@ void XCSP3Manager::newConstraintBinPacking(XConstraintBinPacking *constraint) {
 void XCSP3Manager::newConstraintInstantiation(XConstraintInstantiation *constraint) {
     if(discardedClasses(constraint->classes))
         return;
-    callback->buildConstraintInstantiation(constraint->id, constraint->list, constraint->values);
+    vector<int> values;
+    int v;
+    for(XEntity *xe: constraint->values) {
+        isInteger(xe, v);
+        values.push_back(v);
+    }
+    callback->buildConstraintInstantiation(constraint->id, constraint->list, values);
 }
 
 //--------------------------------------------------------------------------------------
@@ -1207,8 +1269,10 @@ void XCSP3Manager::newConstraintPrecedence(XConstraintPrecedence *constraint) {
         isInteger(xe, v);
         values.push_back(v);
     }
-
-    callback->buildConstraintPrecedence(constraint->id, constraint->list, values);
+    if(values.empty())
+        callback->buildConstraintPrecedence(constraint->id, constraint->list, constraint->covered);
+    else
+        callback->buildConstraintPrecedence(constraint->id, constraint->list, values, constraint->covered);
 }
 
 
@@ -1244,6 +1308,7 @@ void XCSP3Manager::newConstraintKnapsack(XConstraintKnapsack *constraint) {
     if(discardedClasses(constraint->classes))
         return;
 
+    auto *c = dynamic_cast<XConstraintKnapsack*>(constraint);
     vector<int> profits, weights;
     int v;
     for(XEntity *xe: constraint->profits) {
@@ -1254,14 +1319,11 @@ void XCSP3Manager::newConstraintKnapsack(XConstraintKnapsack *constraint) {
         isInteger(xe, v);
         weights.push_back(v);
     }
-    XCondition xc;
-    constraint->extractCondition(xc);
+    XCondition weightsCondition, profitsCondition;
 
-    int value;
-    if(isInteger(constraint->value, value))
-        callback->buildConstraintKnapsack(constraint->id, constraint->list, weights, profits, value, xc);
-    else
-        callback->buildConstraintKnapsack(constraint->id, constraint->list, weights, profits, (XVariable *) constraint->value, xc);
+    XCSP3Core::XConstraintKnapsack::extract(weightsCondition, constraint->condition);
+    XCSP3Core::XConstraintKnapsack::extract(profitsCondition, c->profitCondition.condition);
+    callback->buildConstraintKnapsack(constraint->id, constraint->list, weights, profits, weightsCondition, profitsCondition);
 }
 
 
@@ -1364,12 +1426,16 @@ void XCSP3Manager::newConstraintGroup(XConstraintGroup *group) {
             unfoldConstraint<XConstraintCumulative>(group, i, &XCSP3Manager::newConstraintCumulative);
         if(group->type == FLOW)
             unfoldConstraint<XConstraintFlow>(group, i, &XCSP3Manager::newConstraintFlow);
+        if(group->type == BINPACKING)
+            unfoldConstraint<XConstraintBinPacking>(group, i, &XCSP3Manager::newConstraintBinPacking);
         if(group->type == KNAPSACK)
             unfoldConstraint<XConstraintKnapsack>(group, i, &XCSP3Manager::newConstraintKnapsack);
         if(group->type == MAXARG)
             unfoldConstraint<XConstraintMaximum>(group, i, &XCSP3Manager::newConstraintMaxArg);
         if(group->type == MINARG)
             unfoldConstraint<XConstraintMaximum>(group, i, &XCSP3Manager::newConstraintMinArg);
+        if(group->type == PRECEDENCE)
+            unfoldConstraint<XConstraintPrecedence>(group, i, &XCSP3Manager::newConstraintPrecedence);
 
         if(group->type == UNKNOWN) {
             throw runtime_error("Group constraint is badly defined");
@@ -1396,6 +1462,21 @@ void XCSP3Manager::addObjective(XObjective *objective) {
         return;
     }
 
+    vector<int> intcoeffs;
+    vector<XVariable *> varcoeffs;
+    int v;
+    // Create good coefficients.
+    if(objective->coeffs.size() > 0) {
+        for(XEntity *xe : objective->coeffs) {
+            if(isInteger(xe, v))
+                intcoeffs.push_back(v);
+            else
+                varcoeffs.push_back((XVariable *) mapping[xe->id]);
+        }
+        if(varcoeffs.size() > 0 && intcoeffs.size() > 0)
+            throw runtime_error("Error in coefficients of obejctive");
+    }
+
 
     // Expressions ??
     vector<Tree *> trees;
@@ -1408,16 +1489,23 @@ void XCSP3Manager::addObjective(XObjective *objective) {
                 callback->buildObjectiveMaximize(objective->type, trees);
             return;
         }
-        if(objective->goal == MINIMIZE)
-            callback->buildObjectiveMinimize(objective->type, trees, objective->coeffs);
-        else
-            callback->buildObjectiveMaximize(objective->type, trees, objective->coeffs);
-
+        if(objective->goal == MINIMIZE) {
+            if(intcoeffs.size() > 0)
+                callback->buildObjectiveMinimize(objective->type, trees, intcoeffs);
+            else
+                callback->buildObjectiveMinimize(objective->type, trees, varcoeffs);
+        }
+        else {
+            if(intcoeffs.size() > 0)
+                callback->buildObjectiveMaximize(objective->type, trees, intcoeffs);
+            else
+                callback->buildObjectiveMaximize(objective->type, trees, varcoeffs);
+        }
         return;
     }
 
 
-    if(objective->type == SUM_O && callback->normalizeSum) {
+    if(objective->type == SUM_O && (intcoeffs.size() > 0 || (objective->coeffs.size() == 0)) &&  callback->normalizeSum) {
         if(objective->coeffs.size() == 0) {
             bool toModify = false;
             // Check if a variable appears two times
@@ -1427,10 +1515,10 @@ void XCSP3Manager::addObjective(XObjective *objective) {
                         toModify = true;
                 }
             if(toModify)
-                objective->coeffs.assign(objective->list.size(), 1);
+                intcoeffs.assign(objective->list.size(), 1);
         }
-        if(objective->coeffs.size() > 0)
-            normalizeSum(objective->list, objective->coeffs);
+        if(intcoeffs.size() > 0)
+            normalizeSum(objective->list, intcoeffs);
     }
 
     if(objective->coeffs.size() == 0) {
@@ -1440,11 +1528,19 @@ void XCSP3Manager::addObjective(XObjective *objective) {
             callback->buildObjectiveMaximize(objective->type, objective->list);
         return;
     }
-    if(objective->goal == MINIMIZE)
-        callback->buildObjectiveMinimize(objective->type, objective->list, objective->coeffs);
-    else
-        callback->buildObjectiveMaximize(objective->type, objective->list, objective->coeffs);
+    if(objective->goal == MINIMIZE) {
+        if(intcoeffs.size() > 0)
+            callback->buildObjectiveMinimize(objective->type, objective->list, intcoeffs);
+        else
+            callback->buildObjectiveMinimize(objective->type, objective->list, varcoeffs);
 
+    } else {
+        if(intcoeffs.size() > 0)
+            callback->buildObjectiveMaximize(objective->type, objective->list, intcoeffs);
+        else
+            callback->buildObjectiveMaximize(objective->type, objective->list, varcoeffs);
+
+    }
 }
 
 

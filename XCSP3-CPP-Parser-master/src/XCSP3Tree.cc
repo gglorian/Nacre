@@ -31,6 +31,8 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <functional>
+
 using namespace XCSP3Core;
 using namespace std;
 
@@ -38,14 +40,14 @@ using namespace std;
 // trim from start
 
 static inline std::string &ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c){ return !std::isspace(c); }));
     return s;
 }
 
 // trim from end
 
 static inline std::string &rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char c){ return !std::isspace(c); }).base(), s.end());
     return s;
 }
 
@@ -56,7 +58,7 @@ static inline std::string &trim(std::string &s) {
 }
 
 template <typename T>
-static int min(T v1, T v2, T v3) {
+static T min(T v1, T v2, T v3) {
     if (v1 == -1) v1 = std::numeric_limits<T>::max();
     if (v2 == -1) v2 = std::numeric_limits<T>::max();
     if (v3 == -1) v3 = std::numeric_limits<T>::max();
@@ -70,16 +72,23 @@ Node *Tree::fromStringToTree(std::string current) {
     std::vector<NodeOperator*> stack;
     std::vector<Node*> params;
     while (true) {
-        int posOpenParenthesis = current.find('(');
-        int posCloseParenthesis = current.find(')');
-        int posComma = current.find(',');
-        int nb = min(posCloseParenthesis, posComma, posOpenParenthesis);
+        string::size_type posOpenParenthesis = current.find('(');
+        string::size_type posCloseParenthesis = current.find(')');
+        string::size_type posComma = current.find(',');
+        string::size_type nb = min(posCloseParenthesis, posComma, posOpenParenthesis);
 
 
         string currentElement = current.substr(0, nb);
+
+
+        if(nb == string::npos) {// No operator, just a variable
+            createBasicParameter(currentElement,stack,params);
+            break;
+        }
+
         if (currentElement != "" && nb != posOpenParenthesis)
             createBasicParameter(currentElement,stack,params);
-        
+
 
         if (nb == posCloseParenthesis)
             closeOperator(stack,params);
@@ -87,8 +96,7 @@ Node *Tree::fromStringToTree(std::string current) {
 
         if (nb == posOpenParenthesis)
             createOperator(currentElement,stack,params);
-        if(nb == std::numeric_limits<int>::max()) // No operator, just a variable
-            break;
+
 
         current = current.substr(nb + 1);
         if (current == "") break;
@@ -112,12 +120,14 @@ void Tree::createOperator(string currentElement, std::vector<NodeOperator*> &sta
 void Tree::closeOperator(std::vector<NodeOperator*> &stack,std::vector<Node*> &params) {
     NodeOperator *tmp = stack.back();
 
-    int startParams = params.size() - 1;
+    assert(params.size() > 0);
+    int startParams = static_cast<int>(params.size()) - 1;
     while (params[startParams] != nullptr)
         startParams--;
     startParams++;
+
     int nbP = 0;
-    for (unsigned int i = startParams; i < params.size(); i++, nbP++)
+    for (decltype(params.size()) i = startParams; i < params.size(); i++, nbP++)
         tmp->addParameter(params[i]);
     stack.pop_back();
     //params.shrink(nbP);
@@ -141,7 +151,6 @@ void Tree::createBasicParameter(string currentElement, std::vector<NodeOperator*
             }
         if (position == -1) {
             listOfVariables.push_back(currentElement);
-            position = listOfVariables.size() - 1;
         }
         params.push_back(new NodeVariable(currentElement));
     }

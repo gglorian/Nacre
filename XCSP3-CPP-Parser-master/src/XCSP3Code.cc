@@ -39,7 +39,7 @@ namespace XCSP3Core {
  vector<XTransition> tr; // Not beautiful but remove code to fixed data in group constraint.
  string st;
  vector<string> fi;
- vector<int> _except;
+ vector<int> ___except;
  OrderType _op;
  vector<int> _values;
 
@@ -167,9 +167,9 @@ XVariableArray::XVariableArray(std::string idd, XVariableArray *as) : sizes(as->
     indexes.assign(as->sizes.size(), 0);
     variables.assign(as->variables.size(), NULL);
     id = idd;
-    for(unsigned int i = 0 ; i < variables.size() ; i++) {
+    for(decltype(variables.size()) i = 0 ; i < variables.size() ; i++) {
         variables[i] = new XVariable(idd, as->variables[i]->domain, indexes);
-        for(int j = sizes.size() - 1 ; j >= 0 ; j--)
+        for(int j = static_cast<int>(sizes.size()/*unsigned*/) - 1 ; j >= 0 ; j--)
             if(++indexes[j] == sizes[j])
                 indexes[j] = 0;
             else
@@ -183,7 +183,7 @@ XVariableArray::~XVariableArray() {}
 
 void XVariableArray::indexesFor(int flatIndex, std::vector<int> &indexes) {
     indexes.resize(sizes.size());
-    for(int i = indexes.size() - 1 ; i > 0 ; i--) {
+    for(int i = static_cast<int>(indexes.size()) - 1; i > 0 ; i--) {
         indexes[i] = flatIndex % sizes[i];
         flatIndex = flatIndex / sizes[i];
     }
@@ -192,7 +192,7 @@ void XVariableArray::indexesFor(int flatIndex, std::vector<int> &indexes) {
 
 
 bool XVariableArray::incrementIndexes(vector<int> &indexes, vector<XIntegerEntity *> &ranges) {
-    int j = indexes.size() - 1;
+    int j = static_cast<int>(indexes.size()) - 1;
     for(; j >= 0 ; j--)
         if(ranges[j]->width() == 1)
             continue;
@@ -209,13 +209,13 @@ void XVariableArray::getVarsFor(vector<XVariable *> &list, string compactForm, v
     string tmp;
     // Compute the different ranges for all dimension
     for(unsigned int i = 0 ; i < sizes.size() ; i++) {
-        int pos = compactForm.find(']');
+        string::size_type pos = compactForm.find(']');
         tmp = compactForm.substr(1, pos - 1);
         compactForm = compactForm.substr(pos + 1);
         if(tmp.size() == 0) {
             ranges.push_back(new XIntegerInterval(0, sizes[i] - 1));
         } else {
-            size_t dot = tmp.find("..");
+            string::size_type dot = tmp.find("..");
             if(dot == string::npos)
                 ranges.push_back(new XIntegerValue(std::stoi(tmp)));
             else {
@@ -253,7 +253,7 @@ void XVariableArray::buildVarsWith(XDomainInteger *domain) {
     for(unsigned int i = 0 ; i < variables.size() ; i++) {
         if(variables[i] == NULL) // We need to create a variable
             variables[i] = new XVariable(id, domain, indexes);
-        for(int j = sizes.size() - 1 ; j >= 0 ; j--)
+        for(int j = static_cast<int>(sizes.size()) - 1 ; j >= 0 ; j--)
             if(++indexes[j] == sizes[j])
                 indexes[j] = 0;
             else
@@ -264,7 +264,7 @@ void XVariableArray::buildVarsWith(XDomainInteger *domain) {
 
 int XVariableArray::flatIndexFor(vector<int> indexes) {
     int sum = 0;
-    for(int i = indexes.size() - 1, nb = 1 ; i >= 0 ; i--) {
+    for(int i = static_cast<int>(indexes.size()) - 1, nb = 1; i >= 0 ; i--) {
         sum += indexes[i] * nb;
         nb *= sizes[i];
     }
@@ -312,7 +312,7 @@ void XConstraintGroup::unfoldVector(vector<XVariable *> &toUnfold, vector<XVaria
 
 
 void XConstraintGroup::unfoldString(string &toUnfold, vector<XVariable *> &args) {
-    for(int i = args.size() - 1 ; i >= 0 ; i--) {
+    for(int i = static_cast<int>(args.size()) - 1 ; i >= 0 ; i--) {
         string param = "%" + std::to_string(i);
         ReplaceStringInPlace(toUnfold, param, args[i]->id);
     }
@@ -349,6 +349,10 @@ void XInitialCondition::unfoldParameters(XConstraintGroup *group, vector<XVariab
 
 
 void XInitialCondition::extractCondition(XCondition &xc) { // Create the op and the operand (which can be a value, an interval or a XVariable)
+    XInitialCondition::extract(xc, condition);
+}
+
+void XInitialCondition::extract(XCondition &xc, string &condition) { // Create the op and the operand (which can be a value, an interval or a XVariable)
     std::regex const rglt(R"(\(.*(le|lt|ge|gt|in|eq|ne),(.*)\).*)");
     std::smatch match;
     std::regex_match(condition, match, rglt);
@@ -370,7 +374,7 @@ void XInitialCondition::extractCondition(XCondition &xc) { // Create the op and 
     if(tmp0 == "ne") xc.op = NE;
     //std::cout << condition <<": "<< tmp0 << " " <<tmp1 << std::endl;
     //printf("%d %d\n",' ',condition[condition.length()-1]);
-    size_t dotdot = tmp1.find('.');
+    string::size_type dotdot = tmp1.find('.');
     if(dotdot != string::npos) { // Normal variable
         xc.operandType = INTERVAL;
         xc.min = stoi(tmp1.substr(0, dotdot));
@@ -381,7 +385,7 @@ void XInitialCondition::extractCondition(XCondition &xc) { // Create the op and 
     try {
         xc.val = stoi(tmp1);
         xc.operandType = INTEGER;
-    } catch(const invalid_argument &e) {
+    } catch(const invalid_argument &) {
         xc.var = tmp1;
         xc.operandType = VARIABLE;
     }
@@ -435,6 +439,18 @@ void XConstraintIntension::unfoldParameters(XConstraintGroup *group, vector<XVar
     group->unfoldString(function, arguments);
 }
 
+void XConstraintRegular::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments,
+                                          XConstraint *original) {
+    XConstraint::unfoldParameters(group, arguments, original);
+    XConstraintRegular *xr = dynamic_cast<XConstraintRegular *>(original);
+    start = xr->start;
+    group->unfoldString(start, arguments);
+    final.assign(xr->final.begin(), xr->final.end());
+    for(auto &s : final) {
+        group->unfoldString(s, arguments);
+    }
+    transitions.assign(xr->transitions.begin(), xr->transitions.end());
+}
 
 void XConstraintGroup::unfoldArgumentNumber(int i, XConstraint *builtConstraint) {
     builtConstraint->unfoldParameters(this, arguments[i], constraint);
@@ -559,7 +575,8 @@ void XConstraintNoOverlap::unfoldParameters(XConstraintGroup *group, vector<XVar
 
 void XConstraintCumulative::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
     XConstraintCumulative *xc = dynamic_cast<XConstraintCumulative *>(original);
-    XConstraint::unfoldParameters(group, arguments, original);
+
+    //XConstraint::unfoldParameters(group, arguments, original); // Done with origins.
     XLengths::unfoldParameters(group, arguments, original);
     XInitialCondition::unfoldParameters(group, arguments, original);
     group->unfoldVector(origins, arguments, xc->origins);
@@ -573,6 +590,9 @@ void XConstraintBinPacking::unfoldParameters(XConstraintGroup *group, vector<XVa
     XConstraint::unfoldParameters(group, arguments, original);
     XValues::unfoldParameters(group, arguments, original);
     XInitialCondition::unfoldParameters(group, arguments, original);
+    group->unfoldVector(limits, arguments, xc->limits);
+    group->unfoldVector(loads, arguments, xc->loads);
+    group->unfoldString(xc->conditions, arguments);
 }
 
 
@@ -592,7 +612,6 @@ void XConstraintCircuit::unfoldParameters(XConstraintGroup *group, vector<XVaria
 void XConstraintClause::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
 
     for(XVariable *xv : arguments) {
-        XTree *xt;
         if(dynamic_cast<XTree*>(xv) != nullptr) { // not
             if (xv->id.rfind("not(", 0) != 0)
                 throw runtime_error("a clause is malformed in a group: " + xv->id);
@@ -605,12 +624,17 @@ void XConstraintClause::unfoldParameters(XConstraintGroup *group, vector<XVariab
     }
 }
 
+void XConstraintInstantiation::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
+    XConstraint::unfoldParameters(group, arguments, original);
+    XValues::unfoldParameters(group, arguments, original);
+}
 
 
 void XConstraintPrecedence::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
     XConstraintPrecedence *xc = dynamic_cast<XConstraintPrecedence *>(original);
     XConstraint::unfoldParameters(group, arguments, original);
     XValues::unfoldParameters(group, arguments, original);
+    covered = xc->covered;
 }
 
 void XConstraintFlow::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
@@ -620,6 +644,7 @@ void XConstraintFlow::unfoldParameters(XConstraintGroup *group, vector<XVariable
     XInitialCondition::unfoldParameters(group, arguments, original);
     group->unfoldVector(weights, arguments, xc->weights);
     group->unfoldVector(balance, arguments, xc->balance);
+    arcs.assign(xc->arcs.begin(), xc->arcs.end());
 }
 
 
@@ -628,8 +653,8 @@ void XConstraintFlow::unfoldParameters(XConstraintGroup *group, vector<XVariable
 void XConstraintKnapsack::unfoldParameters(XConstraintGroup *group, vector<XVariable *> &arguments, XConstraint *original) {
     XConstraintKnapsack *xc = dynamic_cast<XConstraintKnapsack *>(original);
     XConstraint::unfoldParameters(group, arguments, original);
-    XValue::unfoldParameters(group, arguments, original);
     XInitialCondition::unfoldParameters(group, arguments, original);
+    group->unfoldString(profitCondition.condition, arguments);
     group->unfoldVector(profits, arguments, xc->profits);
     group->unfoldVector(weights, arguments, xc->weights);
 }
@@ -663,7 +688,7 @@ inline bool XCSP3Core::instanceof(const T *) {
 
 
 void XCSP3Core::ReplaceStringInPlace(std::string &subject, const std::string &search, const std::string &replace) {
-    size_t pos = 0;
+    std::string::size_type pos = 0;
     while((pos = subject.find(search, pos)) != std::string::npos) {
         subject.replace(pos, search.length(), replace);
         pos += replace.length();
@@ -672,13 +697,13 @@ void XCSP3Core::ReplaceStringInPlace(std::string &subject, const std::string &se
 
 
 std::string &XCSP3Core::ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun(std::iswspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char c){ return !std::isspace(c); }));
     return s;
 }
 
 
 std::string &XCSP3Core::rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun(std::iswspace))).base(), s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char c){ return !std::isspace(c); }).base(), s.end());
     return s;
 }
 

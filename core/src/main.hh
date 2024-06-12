@@ -149,6 +149,13 @@ public:
         std::cout << "s UNSUPPORTED" << endl;
         throw runtime_error("Unsupported");
     }
+
+    virtual void buildConstraintCount(string id, vector<Tree*>& trees, vector<int>& values, XCondition& xc) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
+
     virtual void buildConstraintExactlyK(string id, vector<XVariable*>& list, int value, int k) override;
     virtual void buildConstraintExactlyVariable(string id, vector<XVariable*>& list, int value, XVariable* x) override;
     virtual void buildConstraintNValues(string id, vector<XVariable*>& list, vector<int>& except, XCondition& xc) override
@@ -196,8 +203,18 @@ public:
         std::cout << "s UNSUPPORTED" << endl;
         throw runtime_error("Unsupported");
     }
+    virtual void buildConstraintElement(string id, vector<vector<int>>& matrix, int startRowIndex, XVariable* rowIndex, int startColIndex, XVariable* colIndex, XVariable* value) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
 
     virtual void buildConstraintMaximum(string id, vector<XVariable*>& list, XCondition& xc) override;
+    virtual void buildConstraintMaximum(string id, vector<Tree*>& list, XCondition& xc) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
     virtual void buildConstraintMaximum(string id, vector<XVariable*>& list, XVariable* index, int startIndex, RankType rank, XCondition& xc) override
     {
         std::cout << "s UNSUPPORTED" << endl;
@@ -212,6 +229,13 @@ public:
 
     // INSTANTIATION
     virtual void buildConstraintInstantiation(string id, vector<XVariable*>& list, vector<int>& values) override;
+
+    // CLAUSE
+    virtual void buildConstraintClause(string id, vector<XVariable*>& positive, vector<XVariable*>& negative) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
 
     // PACKING AND SCHEDULLING
     virtual void buildConstraintCircuit(string id, vector<XVariable*>& list, int startIndex, int size) override
@@ -229,6 +253,7 @@ public:
         std::cout << "s UNSUPPORTED" << endl;
         throw runtime_error("Unsupported");
     }
+
 
     virtual void buildConstraintNoOverlap(string id, vector<vector<XVariable*>>& origins, vector<vector<int>>& lengths, bool zeroIgnored) override
     {
@@ -257,6 +282,30 @@ public:
         throw runtime_error("Unsupported");
     }
     virtual void buildConstraintStretch(string id, vector<XVariable*>& list, vector<int>& values, vector<XInterval>& widths) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
+
+    virtual void buildConstraintPrecedence(string id, vector<XVariable*>& list, vector<int> values, bool covered) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
+
+    virtual void buildConstraintBinPacking(string id, vector<XVariable*>& list, vector<int>& sizes, XCondition& cond) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
+
+    virtual void buildConstraintFlow(string id, vector<XVariable*>& list, vector<int>& balance, vector<int>& weights, vector<vector<int>>& arcs, XCondition& xc) override
+    {
+        std::cout << "s UNSUPPORTED" << endl;
+        throw runtime_error("Unsupported");
+    }
+
+    virtual void buildConstraintKnapsack(string id, vector<XVariable*>& list, vector<int>& weights, vector<int>& profits, XCondition weightsCondition, XCondition& profitCondition) override
     {
         std::cout << "s UNSUPPORTED" << endl;
         throw runtime_error("Unsupported");
