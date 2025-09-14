@@ -122,6 +122,7 @@ public:
     virtual void buildConstraintNotAllEqual(string id, vector<XVariable*>& list) override;
 
     virtual void buildConstraintOrdered(string id, vector<XVariable*>& list, OrderType order) override;
+    virtual void buildConstraintOrdered(string id, vector<XVariable *> &list, vector<XVariable*> &lengths, OrderType order) override;
     virtual void buildConstraintOrdered(string id, vector<XVariable*>& list, vector<int>& lengths, OrderType order) override;
 
     // SUMMING
@@ -789,10 +790,14 @@ void sum(string id, vector<Variable*>& vars, int limit, OrderType op)
     case NE:
         vecCont.push_back(new ConstraintSumNE(id, vars, limit));
         break;
-    /* case IN:
-        vecCont.push_back(new ConstraintSumGE(id, vars, cond.min));
-        vecCont.push_back(new ConstraintSumLE(id, vars, cond.max));
-        break; */
+    // case IN:
+    //     vecCont.push_back(new ConstraintSumGE(id, vars, cond.min));
+    //     vecCont.push_back(new ConstraintSumLE(id, vars, cond.max));
+    //     break;
+    // case NOTIN:
+    //     vecCont.push_back(new ConstraintSumLE(id, vars, cond.min));
+    //     vecCont.push_back(new ConstraintSumGE(id, vars, cond.max));
+    //     break;
     default:
         std::cout << "s UNSUPPORTED" << endl;
         throw runtime_error("Operator not supported for sum");
@@ -1045,6 +1050,12 @@ void XCSP3Callbacks::buildConstraintOrdered(string id, vector<XVariable*>& list,
         throw runtime_error("Operator not supported for ordered");
         break;
     }
+}
+
+void XCSP3Callbacks::buildConstraintOrdered(string id, vector<XVariable *> &list, vector<XVariable*> &lengths, OrderType order)
+{
+    std::cout << "s UNSUPPORTED" << endl;
+    throw runtime_error("Unsupported Ordered with variable lengths");
 }
 
 void XCSP3Callbacks::buildConstraintOrdered(string id, vector<XVariable*>& list, vector<int>& lengths, OrderType order)
